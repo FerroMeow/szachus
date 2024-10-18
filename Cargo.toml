@@ -1,0 +1,27 @@
+[package]
+name = "szachus"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.14.2", features = ["dynamic_linking"] }
+log = { version = "*", features = ["max_level_debug", "release_max_level_warn"] }
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+strip = "debuginfo"
+
+[unstable]
+codegen-backend = true
+
+[profile.dev]
+opt-level = 1
+[profile.dev.package."*"]
+opt-level = 3
+
+[target.wasm32-unknown-unknown]
+runner = "wasm-server-runner"

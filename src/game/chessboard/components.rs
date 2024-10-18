@@ -1,30 +1,31 @@
+use crate::game::ChessPieceColorEnum;
 use bevy::prelude::*;
 
-enum PlayerColor {
-    White,
-    Black,
-}
+use super::ChessPieceTypeEnum;
 
 #[derive(Component)]
-struct ChessPieceColor(PlayerColor);
+pub(crate) struct ChessPieceType(pub ChessPieceTypeEnum);
 
 #[derive(Component)]
-struct ChessPieceAlive(bool);
+pub(crate) struct ChessPieceColor(pub ChessPieceColorEnum);
 
 #[derive(Component)]
-struct Pawn;
+pub(crate) struct ChessPieceAlive(pub bool);
 
 #[derive(Component)]
-struct Knight;
+pub(crate) struct Pawn;
 
 #[derive(Component)]
-struct Rook;
+pub(crate) struct Knight;
 
 #[derive(Component)]
-struct Bishop;
+pub(crate) struct Rook;
 
 #[derive(Component)]
-struct Queen;
+pub(crate) struct Bishop;
 
 #[derive(Component)]
-struct King;
+pub(crate) struct Queen;
+
+#[derive(Component)]
+pub(crate) struct King;

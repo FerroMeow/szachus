@@ -1,10 +1,15 @@
+use core::panic;
+
+use super::{components::*, ChessPieceTypeEnum};
+use crate::game::{resources::PlayerColorResource, ChessPieceColorEnum};
+
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 
 const BOARD_SIZE: usize = 8;
-const TILE_SIZE: f32 = 100.0;
+const TILE_SIZE: f32 = 32.0;
 
 pub fn create_camera(mut commands: Commands) {
     let middle_point = BOARD_SIZE as f32 * TILE_SIZE / 2.0;
@@ -39,4 +44,220 @@ pub fn draw_chessboard(
     }
 }
 
-pub fn add_chess_pieces(commands: Commands) {}
+pub fn add_chess_pieces(
+    mut commands: Commands,
+    player_color: Res<PlayerColorResource>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlas_layout_asset: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    let player_color = player_color.0;
+    let enemy_color = match player_color {
+        ChessPieceColorEnum::White => ChessPieceColorEnum::Black,
+        ChessPieceColorEnum::Black => ChessPieceColorEnum::White,
+    };
+    // Load sprites
+    let chesspieces_texture: Handle<Image> = asset_server.load("textures/chesspieces.png");
+    let chesspieces_layout = TextureAtlasLayout::from_grid(UVec2::new(18, 28), 6, 2, None, None);
+    let chesspieces_layout_handle = texture_atlas_layout_asset.add(chesspieces_layout);
+    // Spawn pawn rows
+    for i in 0..8 {
+        spawn_chess_piece(
+            &mut commands,
+            chesspieces_texture.clone(),
+            chesspieces_layout_handle.clone(),
+            player_color,
+            ChessPieceTypeEnum::Pawn,
+            UVec2::new(i, 1),
+        );
+        spawn_chess_piece(
+            &mut commands,
+            chesspieces_texture.clone(),
+            chesspieces_layout_handle.clone(),
+            enemy_color,
+            ChessPieceTypeEnum::Pawn,
+            UVec2::new(i, 6),
+        );
+    }
+    // Spawn own first row
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        player_color,
+        ChessPieceTypeEnum::Rook,
+        UVec2::new(0, 0),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        player_color,
+        ChessPieceTypeEnum::Rook,
+        UVec2::new(7, 0),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        player_color,
+        ChessPieceTypeEnum::Knight,
+        UVec2::new(1, 0),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        player_color,
+        ChessPieceTypeEnum::Knight,
+        UVec2::new(6, 0),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        player_color,
+        ChessPieceTypeEnum::Bishop,
+        UVec2::new(2, 0),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        player_color,
+        ChessPieceTypeEnum::Bishop,
+        UVec2::new(5, 0),
+    );
+    // Spawn enemy first row
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        enemy_color,
+        ChessPieceTypeEnum::Rook,
+        UVec2::new(0, 7),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        enemy_color,
+        ChessPieceTypeEnum::Rook,
+        UVec2::new(7, 7),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        enemy_color,
+        ChessPieceTypeEnum::Knight,
+        UVec2::new(1, 7),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        enemy_color,
+        ChessPieceTypeEnum::Knight,
+        UVec2::new(6, 7),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        enemy_color,
+        ChessPieceTypeEnum::Bishop,
+        UVec2::new(2, 7),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        enemy_color,
+        ChessPieceTypeEnum::Bishop,
+        UVec2::new(5, 7),
+    );
+    // Spawn kings and queens
+    let (queen_pos, king_pos) = match (player_color, enemy_color) {
+        (ChessPieceColorEnum::White, ChessPieceColorEnum::Black) => (3, 4),
+        (ChessPieceColorEnum::Black, ChessPieceColorEnum::White) => (4, 3),
+        _ => panic!(),
+    };
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        player_color,
+        ChessPieceTypeEnum::King,
+        UVec2::new(king_pos, 0),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        player_color,
+        ChessPieceTypeEnum::Queen,
+        UVec2::new(queen_pos, 0),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        enemy_color,
+        ChessPieceTypeEnum::King,
+        UVec2::new(king_pos, 7),
+    );
+    spawn_chess_piece(
+        &mut commands,
+        chesspieces_texture.clone(),
+        chesspieces_layout_handle.clone(),
+        enemy_color,
+        ChessPieceTypeEnum::Queen,
+        UVec2::new(queen_pos, 7),
+    );
+}
+
+fn spawn_chess_piece(
+    commands: &mut Commands,
+    texture: Handle<Image>,
+    texture_atlas_layout: Handle<TextureAtlasLayout>,
+    color: ChessPieceColorEnum,
+    chess_type: ChessPieceTypeEnum,
+    tile: UVec2,
+) {
+    let texture_x = match chess_type {
+        ChessPieceTypeEnum::Pawn => 0,
+        ChessPieceTypeEnum::Knight => 1,
+        ChessPieceTypeEnum::Bishop => 2,
+        ChessPieceTypeEnum::Rook => 3,
+        ChessPieceTypeEnum::Queen => 4,
+        ChessPieceTypeEnum::King => 5,
+    };
+    let texture_y = match color {
+        ChessPieceColorEnum::White => 0,
+        ChessPieceColorEnum::Black => 6,
+    };
+    debug!(
+        "X: {:?}, Y: {:?}, Index: {:?}",
+        tile.x as f32 * TILE_SIZE,
+        tile.y as f32 * TILE_SIZE,
+        texture_x + texture_y
+    );
+    commands.spawn((
+        ChessPieceType(chess_type),
+        ChessPieceColor(color),
+        ChessPieceAlive(true),
+        SpriteBundle {
+            transform: Transform::from_xyz(
+                tile.x as f32 * TILE_SIZE,
+                tile.y as f32 * TILE_SIZE,
+                1.0,
+            ),
+            texture,
+            ..default()
+        },
+        TextureAtlas {
+            layout: texture_atlas_layout,
+            index: texture_x + texture_y,
+        },
+    ));
+}

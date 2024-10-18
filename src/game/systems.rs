@@ -1,7 +1,8 @@
-use bevy::{color::palettes::css::WHITE, prelude::*};
+use bevy::prelude::*;
 
-pub fn draw_gizmos(mut gizmos: Gizmos) {
-    gizmos
-        .grid_2d(Vec2::ZERO, 0.0, UVec2::splat(300), Vec2::splat(100.), WHITE)
-        .outer_edges();
+use super::{GameState, PlayerColorResource};
+
+pub(crate) fn begin_game_as_white(mut commands: Commands, mut state: ResMut<NextState<GameState>>) {
+    commands.insert_resource(PlayerColorResource(super::ChessPieceColorEnum::Black));
+    state.set(GameState::Playing);
 }

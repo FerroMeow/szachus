@@ -1,10 +1,9 @@
-use std::default;
-
 use bevy::prelude::*;
 
 pub(crate) mod chessboard;
 pub(crate) mod resources;
 pub(crate) mod systems;
+pub(crate) mod turn;
 
 use resources::*;
 use systems::*;
@@ -37,6 +36,7 @@ impl Plugin for Game {
         app.init_state::<GameState>()
             .init_state::<TurnState>()
             .add_plugins(chessboard::Chessboard)
+            .add_plugins(turn::Turn)
             .add_systems(Startup, begin_game_as_white);
     }
 }

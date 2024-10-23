@@ -1,42 +1,68 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::prelude::*;
+use bevy_mod_picking::prelude::*;
 
 use crate::game::{
-    chessboard::{
-        components::{ChessBoardTile, ChessPiece, ChessPieceAlive, ChessPieceColor, MainCamera},
-        systems::{BOARD_SIZE, TILE_SIZE},
-    },
+    chessboard::components::{ChessBoardTile, ChessPiece, ChessPieceAlive, ChessPieceColor},
     ChessPieceColorEnum,
 };
 
-pub(crate) fn handle_click(
-    q_window: Query<&Window, With<PrimaryWindow>>,
-    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-    q_chess_pieces: Query<(&ChessPieceAlive, &ChessPieceColor, &Transform), With<ChessPiece>>,
-    q_tiles: Query<&ChessBoardTile>,
+use super::{PieceMoveState, SelectedPiece};
+
+pub(super) fn handle_pawn_click(
+    mut event: EventReader<Pointer<Click>>,
+    mut next_state: ResMut<NextState<PieceMoveState>>,
+    query: Query<(Entity, &ChessPieceColor, &ChessPieceAlive), With<ChessPiece>>,
+    mut selected_piece: ResMut<SelectedPiece>,
 ) {
-    let cursor = q_window.single().cursor_position().unwrap();
-    let (camera, camera_transform) = q_camera.single();
-    let Vec2 { x, y } = camera
-        .viewport_to_world_2d(camera_transform, cursor)
-        .unwrap();
-    let Some(active_piece) = q_chess_pieces.iter().find(|(alive, color, transform)| {
-        let true = alive.0 else {
-            return false;
+    for event in event.read() {
+        let PointerButton::Primary = event.button else {
+            continue;
         };
-        let ChessPieceColorEnum::White = color.0 else {
-            return false;
+        let clicked_entity = event.target;
+
+        let Some(piece) = query.iter().find(|(entity, color, alive)| {
+            if *entity != clicked_entity {
+                return false;
+            }
+            let ChessPieceAlive(true) = alive else {
+                return false;
+            };
+            let ChessPieceColor(ChessPieceColorEnum::White) = color else {
+                return false;
+            };
+            true
+        }) else {
+            continue;
         };
-        let Vec2 { x: x_pos, y: y_pos } = transform.translation.xy();
-        if x_pos - TILE_SIZE * 0.5 <= x
-            && x <= x_pos + TILE_SIZE * 0.5
-            && y_pos - TILE_SIZE * 0.5 <= y
-            && y <= y_pos + TILE_SIZE * 0.5
-        {
-            return true;
-        }
-        false
-    }) else {
+        selected_piece.0 = Some(clicked_entity);
+        next_state.set(PieceMoveState::PieceSelected);
+        debug!("Clicked on entity {:?}", piece.0);
+    }
+}
+
+pub(super) fn handle_field_click(
+    mut ev: EventReader<Pointer<Click>>,
+    mut next_state: ResMut<NextState<PieceMoveState>>,
+    mut q_pieces: Query<&mut Transform, (With<ChessPiece>, Without<ChessBoardTile>)>,
+    q_tiles: Query<&Transform, (With<ChessBoardTile>, Without<ChessPiece>)>,
+    selected_piece: Res<SelectedPiece>,
+) {
+    let Some(selected_piece) = selected_piece.0 else {
         return;
     };
-    debug!("Got the chess piece");
+    let mut piece_transform = q_pieces.get_mut(selected_piece).unwrap();
+    for ev in ev.read() {
+        let selected_tile = ev.target;
+        let Ok(queried_tile) = q_tiles.get(selected_tile) else {
+            continue;
+        };
+        debug!(
+            "Moving entity {:?} to position {:?}",
+            selected_piece,
+            queried_tile.translation.truncate()
+        );
+        piece_transform.translation.x = queried_tile.translation.x;
+        piece_transform.translation.y = queried_tile.translation.y;
+        next_state.set(PieceMoveState::TurnBeginning);
+    }
 }

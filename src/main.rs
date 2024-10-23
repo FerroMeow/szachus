@@ -1,5 +1,7 @@
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
+use bevy_mod_picking::prelude::SpriteBackend;
+use bevy_mod_picking::DefaultPickingPlugins;
 
 mod game;
 mod main_menu;
@@ -15,6 +17,7 @@ fn main() {
                     ..default()
                 }),
         )
+        .add_plugins(DefaultPickingPlugins)
         .add_plugins(main_menu::MainMenu)
         .add_plugins(game::Game)
         .run();

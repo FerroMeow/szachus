@@ -7,6 +7,7 @@ use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
+use bevy_mod_picking::prelude::*;
 
 pub(crate) const BOARD_SIZE: usize = 8;
 pub(crate) const TILE_SIZE: f32 = 32.0;
@@ -45,6 +46,7 @@ pub fn draw_chessboard(
                     ..default()
                 },
                 ChessBoardTile,
+                PickableBundle::default(),
             ));
         }
     }
@@ -260,5 +262,6 @@ fn spawn_chess_piece(
             layout: texture_atlas_layout,
             index: texture_x + texture_y,
         },
+        PickableBundle::default(),
     ));
 }

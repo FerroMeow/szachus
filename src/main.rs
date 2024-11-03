@@ -1,6 +1,5 @@
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::SpriteBackend;
 use bevy_mod_picking::DefaultPickingPlugins;
 
 mod game;

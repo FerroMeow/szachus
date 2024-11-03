@@ -9,7 +9,7 @@ use bevy::{
 };
 use bevy_mod_picking::prelude::*;
 
-pub(crate) const BOARD_SIZE: usize = 8;
+pub(crate) const BOARD_SIZE: i32 = 8;
 pub(crate) const TILE_SIZE: f32 = 32.0;
 
 pub fn create_camera(mut commands: Commands) {
@@ -37,7 +37,7 @@ pub fn draw_chessboard(
             commands.spawn((
                 MaterialMesh2dBundle {
                     mesh: Mesh2dHandle(tile.clone()),
-                    material: colors[(x_pos + y_pos) % 2].clone(),
+                    material: colors[((x_pos + y_pos) as usize) % 2].clone(),
                     transform: Transform::from_xyz(
                         x_pos as f32 * TILE_SIZE + TILE_SIZE * 0.5,
                         y_pos as f32 * TILE_SIZE + TILE_SIZE * 0.5,
@@ -45,10 +45,7 @@ pub fn draw_chessboard(
                     ),
                     ..default()
                 },
-                ChessBoardTile {
-                    x: x_pos as u32,
-                    y: y_pos as u32,
-                },
+                ChessBoardTile { x: x_pos, y: y_pos },
                 PickableBundle::default(),
             ));
         }
@@ -78,7 +75,7 @@ pub fn add_chess_pieces(
             chesspieces_layout_handle.clone(),
             player_color,
             ChessPieceTypeEnum::Pawn,
-            UVec2::new(i, 1),
+            IVec2::new(i, 1),
         );
         spawn_chess_piece(
             &mut commands,
@@ -86,7 +83,7 @@ pub fn add_chess_pieces(
             chesspieces_layout_handle.clone(),
             enemy_color,
             ChessPieceTypeEnum::Pawn,
-            UVec2::new(i, 6),
+            IVec2::new(i, 6),
         );
     }
     // Spawn own first row
@@ -96,7 +93,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         player_color,
         ChessPieceTypeEnum::Rook,
-        UVec2::new(0, 0),
+        IVec2::new(0, 0),
     );
     spawn_chess_piece(
         &mut commands,
@@ -104,7 +101,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         player_color,
         ChessPieceTypeEnum::Rook,
-        UVec2::new(7, 0),
+        IVec2::new(7, 0),
     );
     spawn_chess_piece(
         &mut commands,
@@ -112,7 +109,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         player_color,
         ChessPieceTypeEnum::Knight,
-        UVec2::new(1, 0),
+        IVec2::new(1, 0),
     );
     spawn_chess_piece(
         &mut commands,
@@ -120,7 +117,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         player_color,
         ChessPieceTypeEnum::Knight,
-        UVec2::new(6, 0),
+        IVec2::new(6, 0),
     );
     spawn_chess_piece(
         &mut commands,
@@ -128,7 +125,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         player_color,
         ChessPieceTypeEnum::Bishop,
-        UVec2::new(2, 0),
+        IVec2::new(2, 0),
     );
     spawn_chess_piece(
         &mut commands,
@@ -136,7 +133,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         player_color,
         ChessPieceTypeEnum::Bishop,
-        UVec2::new(5, 0),
+        IVec2::new(5, 0),
     );
     // Spawn enemy first row
     spawn_chess_piece(
@@ -145,7 +142,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         enemy_color,
         ChessPieceTypeEnum::Rook,
-        UVec2::new(0, 7),
+        IVec2::new(0, 7),
     );
     spawn_chess_piece(
         &mut commands,
@@ -153,7 +150,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         enemy_color,
         ChessPieceTypeEnum::Rook,
-        UVec2::new(7, 7),
+        IVec2::new(7, 7),
     );
     spawn_chess_piece(
         &mut commands,
@@ -161,7 +158,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         enemy_color,
         ChessPieceTypeEnum::Knight,
-        UVec2::new(1, 7),
+        IVec2::new(1, 7),
     );
     spawn_chess_piece(
         &mut commands,
@@ -169,7 +166,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         enemy_color,
         ChessPieceTypeEnum::Knight,
-        UVec2::new(6, 7),
+        IVec2::new(6, 7),
     );
     spawn_chess_piece(
         &mut commands,
@@ -177,7 +174,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         enemy_color,
         ChessPieceTypeEnum::Bishop,
-        UVec2::new(2, 7),
+        IVec2::new(2, 7),
     );
     spawn_chess_piece(
         &mut commands,
@@ -185,7 +182,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         enemy_color,
         ChessPieceTypeEnum::Bishop,
-        UVec2::new(5, 7),
+        IVec2::new(5, 7),
     );
     // Spawn kings and queens
     let (queen_pos, king_pos) = match (player_color, enemy_color) {
@@ -199,7 +196,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         player_color,
         ChessPieceTypeEnum::King,
-        UVec2::new(king_pos, 0),
+        IVec2::new(king_pos, 0),
     );
     spawn_chess_piece(
         &mut commands,
@@ -207,7 +204,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         player_color,
         ChessPieceTypeEnum::Queen,
-        UVec2::new(queen_pos, 0),
+        IVec2::new(queen_pos, 0),
     );
     spawn_chess_piece(
         &mut commands,
@@ -215,7 +212,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         enemy_color,
         ChessPieceTypeEnum::King,
-        UVec2::new(king_pos, 7),
+        IVec2::new(king_pos, 7),
     );
     spawn_chess_piece(
         &mut commands,
@@ -223,7 +220,7 @@ pub fn add_chess_pieces(
         chesspieces_layout_handle.clone(),
         enemy_color,
         ChessPieceTypeEnum::Queen,
-        UVec2::new(queen_pos, 7),
+        IVec2::new(queen_pos, 7),
     );
 }
 
@@ -233,7 +230,7 @@ fn spawn_chess_piece(
     texture_atlas_layout: Handle<TextureAtlasLayout>,
     color: ChessPieceColorEnum,
     chess_type: ChessPieceTypeEnum,
-    tile: UVec2,
+    tile: IVec2,
 ) {
     let texture_x = match chess_type {
         ChessPieceTypeEnum::Pawn => 0,
@@ -251,10 +248,10 @@ fn spawn_chess_piece(
         ChessPiece {
             x: tile.x,
             y: tile.y,
+            piece_type: chess_type,
+            color,
+            alive: true,
         },
-        ChessPieceType(chess_type),
-        ChessPieceColor(color),
-        ChessPieceAlive(true),
         SpriteBundle {
             transform: Transform::from_xyz(
                 tile.x as f32 * TILE_SIZE + TILE_SIZE * 0.5,

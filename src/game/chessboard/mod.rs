@@ -2,16 +2,11 @@ use bevy::prelude::*;
 
 pub(crate) mod components;
 pub(crate) mod systems;
-use components::*;
 use systems::*;
 
 use super::{begin_game_as_white, GameState};
 
-pub(crate) struct ChessboardCoordinates {
-    pub horizontal: usize,
-    pub vertical: usize,
-}
-
+#[derive(Clone, Copy, Debug)]
 pub(crate) enum ChessPieceTypeEnum {
     Pawn,
     Rook,
@@ -19,15 +14,6 @@ pub(crate) enum ChessPieceTypeEnum {
     Bishop,
     King,
     Queen,
-}
-
-impl From<UVec2> for ChessboardCoordinates {
-    fn from(value: UVec2) -> Self {
-        Self {
-            horizontal: value.x as usize,
-            vertical: value.y as usize,
-        }
-    }
 }
 
 pub struct Chessboard;

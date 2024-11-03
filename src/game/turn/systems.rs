@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::game::{
-    chessboard::components::{ChessBoardTile, ChessPiece, ChessPieceAlive, ChessPieceColor},
+    chessboard::components::{ChessBoardTile, ChessPiece},
     ChessPieceColorEnum,
 };
 
@@ -11,7 +11,7 @@ use super::{PieceMoveState, SelectedPiece};
 pub(super) fn handle_pawn_click(
     mut event: EventReader<Pointer<Click>>,
     mut next_state: ResMut<NextState<PieceMoveState>>,
-    query: Query<(Entity, &ChessPieceColor, &ChessPieceAlive), With<ChessPiece>>,
+    query: Query<(Entity, &ChessPiece), With<ChessPiece>>,
     mut selected_piece: ResMut<SelectedPiece>,
 ) {
     for event in event.read() {
@@ -20,14 +20,14 @@ pub(super) fn handle_pawn_click(
         };
         let clicked_entity = event.target;
 
-        let Some(piece) = query.iter().find(|(entity, color, alive)| {
+        let Some(piece) = query.iter().find(|(entity, chess_piece)| {
             if *entity != clicked_entity {
                 return false;
             }
-            let ChessPieceAlive(true) = alive else {
+            if !chess_piece.alive {
                 return false;
-            };
-            let ChessPieceColor(ChessPieceColorEnum::White) = color else {
+            }
+            let ChessPieceColorEnum::White = chess_piece.color else {
                 return false;
             };
             true
@@ -50,12 +50,23 @@ pub(super) fn handle_field_click(
     let Some(selected_piece) = selected_piece.0 else {
         return;
     };
+    let piece_vec = q_pieces.iter().map(|(_, piece)| *piece).collect::<Vec<_>>();
     let mut queried_piece = q_pieces.get_mut(selected_piece).unwrap();
     for ev in ev.read() {
         let selected_tile = ev.target;
         let Ok(queried_tile) = q_tiles.get(selected_tile) else {
             continue;
         };
+        if !queried_piece
+            .1
+            .is_move_valid(queried_tile.1, &piece_vec[..])
+        {
+            debug!(
+                "The move from {:?} to {:?} fails",
+                queried_piece.1, queried_tile.1,
+            );
+            continue;
+        }
         debug!(
             "Moving entity {:?} to position {:?}",
             selected_piece,

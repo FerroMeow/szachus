@@ -14,6 +14,15 @@ pub(crate) enum ChessPieceColorEnum {
     Black,
 }
 
+impl ChessPieceColorEnum {
+    fn opposite(&self) -> Self {
+        match *self {
+            ChessPieceColorEnum::White => ChessPieceColorEnum::Black,
+            ChessPieceColorEnum::Black => ChessPieceColorEnum::White,
+        }
+    }
+}
+
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub(crate) enum GameState {
     #[default]

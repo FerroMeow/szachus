@@ -3,7 +3,7 @@ use bevy_mod_picking::prelude::*;
 
 use crate::game::{
     chessboard::components::{ChessBoardTile, ChessPiece},
-    ChessPieceColorEnum,
+    ChessPieceColorEnum, TurnState,
 };
 
 use super::{PieceMoveState, SelectedPiece};
@@ -42,7 +42,8 @@ pub(super) fn handle_pawn_click(
 
 pub(super) fn handle_field_click(
     mut ev: EventReader<Pointer<Click>>,
-    mut next_state: ResMut<NextState<PieceMoveState>>,
+    mut next_move_state: ResMut<NextState<PieceMoveState>>,
+    mut next_turn_state: ResMut<NextState<TurnState>>,
     mut q_pieces: Query<(&mut Transform, &mut ChessPiece), Without<ChessBoardTile>>,
     q_tiles: Query<(&Transform, &ChessBoardTile), Without<ChessPiece>>,
     selected_piece: Res<SelectedPiece>,
@@ -76,6 +77,7 @@ pub(super) fn handle_field_click(
         queried_piece.0.translation.y = queried_tile.0.translation.y;
         queried_piece.1.x = queried_tile.1.x;
         queried_piece.1.y = queried_tile.1.y;
-        next_state.set(PieceMoveState::TurnBeginning);
+        next_move_state.set(PieceMoveState::TurnBeginning);
+        next_turn_state.set(TurnState::WaitingTurn);
     }
 }

@@ -4,10 +4,16 @@ use bevy::prelude::*;
 use super::ChessPieceTypeEnum;
 
 #[derive(Component)]
-pub(crate) struct ChessBoardTile;
+pub(crate) struct ChessBoardTile {
+    pub x: u32,
+    pub y: u32,
+}
 
 #[derive(Component)]
-pub(crate) struct ChessPiece;
+pub(crate) struct ChessPiece {
+    pub x: u32,
+    pub y: u32,
+}
 
 #[derive(Component)]
 pub(crate) struct ChessPieceType(pub ChessPieceTypeEnum);

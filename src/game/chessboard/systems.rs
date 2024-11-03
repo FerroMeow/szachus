@@ -45,7 +45,10 @@ pub fn draw_chessboard(
                     ),
                     ..default()
                 },
-                ChessBoardTile,
+                ChessBoardTile {
+                    x: x_pos as u32,
+                    y: y_pos as u32,
+                },
                 PickableBundle::default(),
             ));
         }
@@ -245,7 +248,10 @@ fn spawn_chess_piece(
         ChessPieceColorEnum::Black => 6,
     };
     commands.spawn((
-        ChessPiece,
+        ChessPiece {
+            x: tile.x,
+            y: tile.y,
+        },
         ChessPieceType(chess_type),
         ChessPieceColor(color),
         ChessPieceAlive(true),

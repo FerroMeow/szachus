@@ -43,14 +43,14 @@ pub(super) fn handle_pawn_click(
 pub(super) fn handle_field_click(
     mut ev: EventReader<Pointer<Click>>,
     mut next_state: ResMut<NextState<PieceMoveState>>,
-    mut q_pieces: Query<&mut Transform, (With<ChessPiece>, Without<ChessBoardTile>)>,
-    q_tiles: Query<&Transform, (With<ChessBoardTile>, Without<ChessPiece>)>,
+    mut q_pieces: Query<(&mut Transform, &mut ChessPiece), Without<ChessBoardTile>>,
+    q_tiles: Query<(&Transform, &ChessBoardTile), Without<ChessPiece>>,
     selected_piece: Res<SelectedPiece>,
 ) {
     let Some(selected_piece) = selected_piece.0 else {
         return;
     };
-    let mut piece_transform = q_pieces.get_mut(selected_piece).unwrap();
+    let mut queried_piece = q_pieces.get_mut(selected_piece).unwrap();
     for ev in ev.read() {
         let selected_tile = ev.target;
         let Ok(queried_tile) = q_tiles.get(selected_tile) else {
@@ -59,10 +59,12 @@ pub(super) fn handle_field_click(
         debug!(
             "Moving entity {:?} to position {:?}",
             selected_piece,
-            queried_tile.translation.truncate()
+            queried_tile.0.translation.truncate()
         );
-        piece_transform.translation.x = queried_tile.translation.x;
-        piece_transform.translation.y = queried_tile.translation.y;
+        queried_piece.0.translation.x = queried_tile.0.translation.x;
+        queried_piece.0.translation.y = queried_tile.0.translation.y;
+        queried_piece.1.x = queried_tile.1.x;
+        queried_piece.1.y = queried_tile.1.y;
         next_state.set(PieceMoveState::TurnBeginning);
     }
 }

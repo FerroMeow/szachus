@@ -3535,6 +3535,7 @@ dependencies = [
  "bevy",
  "bevy_mod_picking",
  "log",
+ "wasm-bindgen",
 ]
 
 [[package]]

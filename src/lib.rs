@@ -1,11 +1,13 @@
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy_mod_picking::DefaultPickingPlugins;
+use wasm_bindgen::prelude::*;
 
 mod game;
 mod main_menu;
 
-fn main() {
+#[wasm_bindgen]
+pub fn main() {
     App::new()
         .add_plugins(
             DefaultPlugins

@@ -41,6 +41,7 @@ pub fn main() {
         )
         .add_plugins(DefaultPickingPlugins)
         .init_resource::<JwtToken>()
+        .add_plugins(network::Network)
         .add_plugins(main_menu::MainMenu)
         .add_plugins(game::Game)
         .run();

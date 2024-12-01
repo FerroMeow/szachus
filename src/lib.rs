@@ -6,6 +6,27 @@ use wasm_bindgen::prelude::*;
 mod game;
 mod main_menu;
 
+#[derive(Resource, Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) struct JwtToken {
+    pub jwt: String,
+}
+
+impl Default for JwtToken {
+    fn default() -> Self {
+        let Some(window) = web_sys::window() else {
+            panic!("Browser window not found")
+        };
+        let Ok(Some(storage)) = window.local_storage() else {
+            panic!("Local storage not found");
+        };
+        let Ok(Some(jwt)) = storage.get("jwt") else {
+            panic!("JWT not found");
+        };
+        debug!(jwt);
+        JwtToken { jwt }
+    }
+}
+
 #[wasm_bindgen]
 pub fn main() {
     App::new()
@@ -19,6 +40,7 @@ pub fn main() {
                 }),
         )
         .add_plugins(DefaultPickingPlugins)
+        .init_resource::<JwtToken>()
         .add_plugins(main_menu::MainMenu)
         .add_plugins(game::Game)
         .run();

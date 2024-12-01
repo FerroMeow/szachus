@@ -36,7 +36,6 @@ pub(super) fn handle_pawn_click(
         };
         selected_piece.0 = Some(clicked_entity);
         next_state.set(PieceMoveState::PieceSelected);
-        debug!("Clicked on entity {:?}", piece.0);
     }
 }
 
@@ -62,17 +61,8 @@ pub(super) fn handle_field_click(
             .1
             .is_move_valid(queried_tile.1, &piece_vec[..])
         {
-            debug!(
-                "The move from {:?} to {:?} fails",
-                queried_piece.1, queried_tile.1,
-            );
             continue;
         }
-        debug!(
-            "Moving entity {:?} to position {:?}",
-            selected_piece,
-            queried_tile.0.translation.truncate()
-        );
         queried_piece.0.translation.x = queried_tile.0.translation.x;
         queried_piece.0.translation.y = queried_tile.0.translation.y;
         queried_piece.1.x = queried_tile.1.x;

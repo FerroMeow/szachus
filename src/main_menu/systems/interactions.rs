@@ -33,13 +33,13 @@ pub fn on_click_game_start(
                 ws.set_onopen(Some(open_cb.as_ref().unchecked_ref()));
                 open_cb.forget();
                 let cb = Closure::<dyn FnMut(_)>::new(move |e: MessageEvent| {
-                    debug!("{:?}", e);
+                    let json = e.data().as_string();
+                    debug!("{:?}", json);
                 });
                 ws.set_onmessage(Some(cb.as_ref().unchecked_ref()));
                 cb.forget();
             })
             .detach();
-        debug!("Click detected");
         player_color.0 = ChessPieceColorEnum::White;
         next_game_state.set(GameState::Playing);
     }

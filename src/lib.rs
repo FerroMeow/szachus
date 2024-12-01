@@ -22,7 +22,6 @@ impl Default for JwtToken {
         let Ok(Some(jwt)) = storage.get("jwt") else {
             panic!("JWT not found");
         };
-        debug!(jwt);
         JwtToken { jwt }
     }
 }

@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 
 mod game;
 mod main_menu;
+mod network;
 
 #[derive(Resource, Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct JwtToken {

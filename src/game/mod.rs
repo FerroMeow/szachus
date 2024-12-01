@@ -1,11 +1,12 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub(crate) mod chessboard;
 pub(crate) mod resources;
 pub(crate) mod systems;
 pub(crate) mod turn;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, Default, Serialize, Deserialize)]
 pub(crate) enum ChessPieceColorEnum {
     #[default]
     White,

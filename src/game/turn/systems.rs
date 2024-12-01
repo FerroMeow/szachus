@@ -20,7 +20,7 @@ pub(super) fn handle_pawn_click(
         };
         let clicked_entity = event.target;
 
-        let Some(piece) = query.iter().find(|(entity, chess_piece)| {
+        let Some(_) = query.iter().find(|(entity, chess_piece)| {
             if *entity != clicked_entity {
                 return false;
             }

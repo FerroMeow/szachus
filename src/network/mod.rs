@@ -1,15 +1,18 @@
 use async_channel::{Receiver, Sender};
 use bevy::{
     app::{FixedUpdate, Plugin},
+    prelude::{in_state, AppExtStates, IntoSystemConfigs},
     tasks::TaskPool,
 };
 use serde::{Deserialize, Serialize};
+use state::ConnectionState;
 use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{MessageEvent, WebSocket};
 
 use crate::game::ChessPieceColorEnum;
 
 pub mod resources;
+pub mod state;
 pub mod systems;
 
 pub(crate) struct GameWsControlMsg {}
@@ -69,6 +72,9 @@ pub(crate) struct Network;
 impl Plugin for Network {
     fn build(&self, app: &mut bevy::prelude::App) {
         use systems::*;
-        app.add_systems(FixedUpdate, on_get_color);
+        app.init_state::<ConnectionState>().add_systems(
+            FixedUpdate,
+            ws_get_color.run_if(in_state(ConnectionState::WebSocket)),
+        );
     }
 }

@@ -1,16 +1,16 @@
 use bevy::{prelude::*, tasks::IoTaskPool};
 
 use crate::{
-    game::{resources::PlayerColorResource, ChessPieceColorEnum, GameState},
+    game::resources::PlayerColorResource,
     main_menu::components::MainMenuStartButton,
-    network::{resources::WebsocketChannels, server_ws_handler},
+    network::{resources::WebsocketChannels, server_ws_handler, state::ConnectionState},
     JwtToken,
 };
 
 pub fn on_click_game_start(
     mut commands: Commands,
     jwt_token: Res<JwtToken>,
-    mut next_game_state: ResMut<NextState<GameState>>,
+    mut connection_state: ResMut<NextState<ConnectionState>>,
     mut player_color: ResMut<PlayerColorResource>,
     query: Query<&Interaction, (Changed<Interaction>, With<MainMenuStartButton>)>,
 ) {
@@ -32,7 +32,6 @@ pub fn on_click_game_start(
             tx_control,
             rx_updates,
         });
-        player_color.0 = ChessPieceColorEnum::White;
-        next_game_state.set(GameState::Playing);
+        connection_state.set(ConnectionState::WebSocket);
     }
 }

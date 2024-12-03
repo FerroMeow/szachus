@@ -1,7 +1,6 @@
 use bevy::{prelude::*, tasks::IoTaskPool};
 
 use crate::{
-    game::resources::PlayerColorResource,
     main_menu::components::MainMenuStartButton,
     network::{resources::WebsocketChannels, server_ws_handler, state::ConnectionState},
     JwtToken,
@@ -11,7 +10,6 @@ pub fn on_click_game_start(
     mut commands: Commands,
     jwt_token: Res<JwtToken>,
     mut connection_state: ResMut<NextState<ConnectionState>>,
-    mut player_color: ResMut<PlayerColorResource>,
     query: Query<&Interaction, (Changed<Interaction>, With<MainMenuStartButton>)>,
 ) {
     for interaction in query.iter() {

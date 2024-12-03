@@ -1,10 +1,11 @@
 use bevy::prelude::*;
 
 pub(crate) mod systems;
+pub(crate) mod to;
 
 use systems::*;
 
-use super::GameState;
+use super::{GameState, TurnState};
 
 pub struct Turn;
 
@@ -29,7 +30,9 @@ impl Plugin for Turn {
             .add_systems(
                 Update,
                 handle_field_click.run_if(
-                    in_state(PieceMoveState::PieceSelected).and_then(in_state(GameState::Playing)),
+                    in_state(PieceMoveState::PieceSelected)
+                        .and_then(in_state(GameState::Playing))
+                        .and_then(in_state(TurnState::PlayersTurn)),
                 ),
             );
     }

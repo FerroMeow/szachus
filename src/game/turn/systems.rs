@@ -4,9 +4,10 @@ use bevy_mod_picking::prelude::*;
 use crate::{
     game::{
         chessboard::components::{ChessBoardTile, ChessPiece},
+        resources::PlayerColorResource,
         ChessPieceColorEnum, TurnState,
     },
-    network::{resources::WebsocketChannels, GameWsControlMsg},
+    network::{resources::WebsocketChannels, GameMessage, GameWsControlMsg, GameWsUpdateMsg},
 };
 
 use super::{
@@ -17,6 +18,7 @@ use super::{
 pub(super) fn handle_pawn_click(
     mut event: EventReader<Pointer<Click>>,
     mut next_state: ResMut<NextState<PieceMoveState>>,
+    player_color: Res<PlayerColorResource>,
     query: Query<(Entity, &ChessPiece), With<ChessPiece>>,
     mut selected_piece: ResMut<SelectedPiece>,
 ) {
@@ -33,7 +35,7 @@ pub(super) fn handle_pawn_click(
             if !chess_piece.alive {
                 return false;
             }
-            let ChessPieceColorEnum::White = chess_piece.color else {
+            if player_color.0 != chess_piece.color {
                 return false;
             };
             true
@@ -47,8 +49,6 @@ pub(super) fn handle_pawn_click(
 
 pub(super) fn handle_field_click(
     mut ev: EventReader<Pointer<Click>>,
-    mut next_move_state: ResMut<NextState<PieceMoveState>>,
-    mut next_turn_state: ResMut<NextState<TurnState>>,
     mut q_pieces: Query<(&mut Transform, &mut ChessPiece), Without<ChessBoardTile>>,
     q_tiles: Query<(&Transform, &ChessBoardTile), Without<ChessPiece>>,
     selected_piece: Res<SelectedPiece>,
@@ -71,14 +71,18 @@ pub(super) fn handle_field_click(
             continue;
         }
         // Send the turn data to the server, naively assume it's a correct move
+        let get_coord = |coord: i32| match queried_piece.1.color {
+            ChessPieceColorEnum::White => coord as u8,
+            ChessPieceColorEnum::Black => 7 - (coord as u8),
+        };
         let chess_move = ChessMove {
             position_from: Position {
-                row: Row(queried_piece.1.x as u8),
-                column: Column(queried_piece.1.y as u8),
+                column: Column(get_coord(queried_piece.1.x)),
+                row: Row(get_coord(queried_piece.1.y)),
             },
             position_to: Position {
-                row: Row(queried_tile.1.x as u8),
-                column: Column(queried_tile.1.x as u8),
+                column: Column(get_coord(queried_tile.1.x)),
+                row: Row(get_coord(queried_tile.1.y)),
             },
         };
         let tx_current = websocket_channels.tx_control.clone();
@@ -96,6 +100,23 @@ pub(super) fn handle_field_click(
         queried_piece.1.x = queried_tile.1.x;
         queried_piece.1.y = queried_tile.1.y;
         // Stop the turn
+    }
+}
+
+pub(crate) fn ws_get_turn(
+    mut next_move_state: ResMut<NextState<PieceMoveState>>,
+    mut next_turn_state: ResMut<NextState<TurnState>>,
+    websocket_channels: Res<WebsocketChannels>,
+) {
+    let Ok(GameWsUpdateMsg::Game(GameMessage::NewTurn(is_turn))) =
+        websocket_channels.rx_updates.try_recv()
+    else {
+        return;
+    };
+    if is_turn {
+        next_move_state.set(PieceMoveState::TurnBeginning);
+        next_turn_state.set(TurnState::PlayersTurn);
+    } else {
         next_move_state.set(PieceMoveState::TurnBeginning);
         next_turn_state.set(TurnState::WaitingTurn);
     }

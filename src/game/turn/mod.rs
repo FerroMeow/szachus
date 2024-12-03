@@ -10,7 +10,7 @@ use super::{GameState, TurnState};
 pub struct Turn;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
-enum PieceMoveState {
+pub(crate) enum PieceMoveState {
     #[default]
     TurnBeginning,
     PieceSelected,
@@ -34,6 +34,10 @@ impl Plugin for Turn {
                         .and_then(in_state(GameState::Playing))
                         .and_then(in_state(TurnState::PlayersTurn)),
                 ),
+            )
+            .add_systems(
+                FixedUpdate,
+                ws_get_turn.run_if(in_state(GameState::Playing)),
             );
     }
 }

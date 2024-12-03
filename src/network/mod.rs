@@ -1,15 +1,14 @@
 use async_channel::{Receiver, Sender};
 use bevy::{
-    app::{FixedUpdate, Plugin},
-    prelude::{in_state, AppExtStates, IntoSystemConfigs},
+    prelude::*,
     tasks::{IoTaskPool, TaskPool},
 };
 use serde::{Deserialize, Serialize};
 use state::ConnectionState;
 use wasm_bindgen::{prelude::Closure, JsCast};
-use web_sys::{MessageEvent, WebSocket};
+use web_sys::{Event, MessageEvent, WebSocket};
 
-use crate::game::{turn::to::ChessMove, ChessPieceColorEnum};
+use crate::game::{turn::to::ChessMove, ChessPieceColorEnum, GameState};
 
 pub mod resources;
 pub mod state;
@@ -18,6 +17,7 @@ pub mod systems;
 #[derive(Serialize)]
 pub(crate) enum GameWsControlMsg {
     TurnEnd(ChessMove),
+    Ack,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,30 +49,43 @@ pub(crate) async fn server_ws_handler(
         return;
     };
     // ws.onOpen
-    let ws_closure = ws.clone();
-    let open_cb: Closure<dyn FnMut()> = Closure::new(move || {
-        ws_closure.send_with_str(&jwt).expect("Failed sending jwt");
+    let ws_on_open = Closure::<dyn FnMut()>::new({
+        let ws_closure = ws.clone();
+        move || {
+            debug!("Handling the web socket! opened!!");
+            ws_closure.send_with_str(&jwt).expect("Failed sending jwt");
+        }
     });
-    ws.set_onopen(Some(open_cb.as_ref().unchecked_ref()));
-    open_cb.forget();
+    ws.set_onopen(Some(ws_on_open.as_ref().unchecked_ref()));
+    ws_on_open.forget();
     // ws.onMessage
-    let cb = Closure::<dyn FnMut(_)>::new(move |e: MessageEvent| {
-        let Some(json) = e.data().as_string() else {
-            return;
-        };
-        let Ok(msg): Result<GameWsUpdateMsg, _> = serde_json::from_str(&json) else {
+    let ws_on_message = Closure::<dyn FnMut(_)>::new(move |e: MessageEvent| {
+        let Some(msg) = e
+            .data()
+            .as_string()
+            .and_then(|str| serde_json::from_str(&str).ok())
+        else {
             return;
         };
         let tx_updates_current = tx_updates.clone();
         TaskPool::new()
-            .spawn(async move { tx_updates_current.send(msg).await.unwrap() })
+            .spawn(async move {
+                debug!("WebSocket: {:?}", &msg);
+                tx_updates_current.send(msg).await.unwrap();
+            })
             .detach();
     });
-    ws.set_onmessage(Some(cb.as_ref().unchecked_ref()));
-    cb.forget();
+    ws.set_onmessage(Some(ws_on_message.as_ref().unchecked_ref()));
+    ws_on_message.forget();
+    // ws.onError
+    let ws_on_error = Closure::<dyn FnMut(_)>::new(move |e: Event| {
+        error!("Error: {:?}", e);
+    });
+    ws.set_onerror(Some(ws_on_error.as_ref().unchecked_ref()));
+    ws_on_error.forget();
     // On rx_control signal
     IoTaskPool::get()
-        .spawn_local(send_ws_message(ws.clone(), rx_control))
+        .spawn_local(send_ws_message(ws, rx_control))
         .detach();
 }
 
@@ -88,9 +101,11 @@ pub(crate) struct Network;
 impl Plugin for Network {
     fn build(&self, app: &mut bevy::prelude::App) {
         use systems::*;
-        app.init_state::<ConnectionState>().add_systems(
-            FixedUpdate,
-            ws_get_color.run_if(in_state(ConnectionState::WebSocket)),
-        );
+        app.init_state::<ConnectionState>()
+            .add_systems(
+                FixedUpdate,
+                ws_get_color.run_if(in_state(ConnectionState::WebSocket)),
+            )
+            .add_systems(OnEnter(GameState::Playing), on_game_start_confirm);
     }
 }

@@ -32,8 +32,8 @@ pub(crate) enum GameState {
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub(crate) enum TurnState {
-    #[default]
     PlayersTurn,
+    #[default]
     WaitingTurn,
 }
 

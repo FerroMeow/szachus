@@ -3,6 +3,7 @@ use bevy::{
     prelude::*,
     tasks::{IoTaskPool, TaskPool},
 };
+use resources::WsUpdate;
 use serde::{Deserialize, Serialize};
 use state::ConnectionState;
 use wasm_bindgen::{prelude::Closure, JsCast};
@@ -32,6 +33,7 @@ pub(crate) enum GameMessage {
     Error(String),
     Notification(String),
     GameEnd(bool),
+    PawnMove(ChessMove),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -102,10 +104,12 @@ impl Plugin for Network {
     fn build(&self, app: &mut bevy::prelude::App) {
         use systems::*;
         app.init_state::<ConnectionState>()
+            .init_resource::<WsUpdate>()
             .add_systems(
                 FixedUpdate,
-                ws_get_color.run_if(in_state(ConnectionState::WebSocket)),
+                ws_update.run_if(in_state(ConnectionState::WebSocket)),
             )
+            .add_systems(FixedUpdate, ws_get_color.after(ws_update))
             .add_systems(OnEnter(GameState::Playing), on_game_start_confirm);
     }
 }

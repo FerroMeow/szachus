@@ -7,3 +7,6 @@ pub(crate) struct WebsocketChannels {
     pub tx_control: Sender<GameWsControlMsg>,
     pub rx_updates: Receiver<GameWsUpdateMsg>,
 }
+
+#[derive(Resource, Default)]
+pub(crate) struct WsUpdate(pub Option<GameWsUpdateMsg>);

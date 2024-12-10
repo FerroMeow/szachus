@@ -5,15 +5,16 @@ use bevy::{
 
 use crate::game::{resources::PlayerColorResource, GameState};
 
-use super::{resources::WebsocketChannels, GameWsControlMsg, GameWsUpdateMsg, MatchmakingResponse};
+use super::{
+    resources::WebsocketChannels, GameWsControlMsg, GameWsUpdateMsg, MatchmakingResponse, WsUpdate,
+};
 
 pub(crate) fn ws_get_color(
     mut next_game_state: ResMut<NextState<GameState>>,
     mut player_color: ResMut<PlayerColorResource>,
-    websocket_channels: Res<WebsocketChannels>,
+    ws_update: Res<WsUpdate>,
 ) {
-    let Ok(GameWsUpdateMsg::Matchmaking(MatchmakingResponse::Success { color })) =
-        websocket_channels.rx_updates.try_recv()
+    let Some(GameWsUpdateMsg::Matchmaking(MatchmakingResponse::Success { color })) = ws_update.0
     else {
         return;
     };
@@ -26,4 +27,14 @@ pub(crate) fn on_game_start_confirm(websocket_channels: Res<WebsocketChannels>) 
     IoTaskPool::get()
         .spawn(async move { tx.send(GameWsControlMsg::Ack).await.unwrap() })
         .detach();
+}
+
+pub(crate) fn ws_update(
+    websocket_channels: Res<WebsocketChannels>,
+    mut ws_update: ResMut<WsUpdate>,
+) {
+    match websocket_channels.rx_updates.try_recv() {
+        Err(_) => ws_update.0 = None,
+        Ok(msg) => ws_update.0 = Some(msg),
+    };
 }

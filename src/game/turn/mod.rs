@@ -5,6 +5,8 @@ pub(crate) mod to;
 
 use systems::*;
 
+use crate::network::systems::ws_update;
+
 use super::{GameState, TurnState};
 
 pub struct Turn;
@@ -24,8 +26,14 @@ impl Plugin for Turn {
         app.init_resource::<SelectedPiece>()
             .init_state::<PieceMoveState>()
             .add_systems(
+                FixedUpdate,
+                (ws_get_turn, ws_get_move).after(ws_update).run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(
                 Update,
-                handle_pawn_click.run_if(in_state(GameState::Playing)),
+                handle_pawn_click.run_if(
+                    in_state(GameState::Playing).and_then(in_state(TurnState::PlayersTurn)),
+                ),
             )
             .add_systems(
                 Update,
@@ -34,10 +42,6 @@ impl Plugin for Turn {
                         .and_then(in_state(GameState::Playing))
                         .and_then(in_state(TurnState::PlayersTurn)),
                 ),
-            )
-            .add_systems(
-                FixedUpdate,
-                ws_get_turn.run_if(in_state(GameState::Playing)),
             );
     }
 }

@@ -9,7 +9,10 @@ use state::ConnectionState;
 use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{Event, MessageEvent, WebSocket};
 
-use crate::game::{turn::to::ChessMove, ChessPieceColorEnum, GameState};
+use crate::game::{
+    turn::to::{ChessMove, Position},
+    ChessPieceColorEnum, GameState,
+};
 
 pub mod resources;
 pub mod state;
@@ -31,9 +34,9 @@ pub(crate) enum MatchmakingServerMsg {
 pub(crate) enum GameServerMsg {
     NewTurn(bool),
     Error(String),
-    Notification(String),
+    MovedCorrectly(Option<(ChessPieceColorEnum, Position)>),
     GameEnd(bool),
-    PawnMove(ChessMove),
+    PawnMove(ChessMove, Option<(ChessPieceColorEnum, Position)>),
 }
 
 #[derive(Serialize)]

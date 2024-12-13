@@ -1,15 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Clone, Serialize, Deserialize, Debug)]
-pub struct Row(pub u8);
-
-#[derive(PartialEq, Clone, Serialize, Deserialize, Debug)]
-pub struct Column(pub u8);
-
-#[derive(PartialEq, Clone, Serialize, Deserialize, Debug)]
 pub struct Position {
-    pub row: Row,
-    pub column: Column,
+    pub column: i8,
+    pub row: i8,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

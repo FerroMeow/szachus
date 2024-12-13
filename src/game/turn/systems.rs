@@ -17,7 +17,7 @@ use crate::{
 };
 
 use super::{
-    to::{ChessMove, Column, Position, Row},
+    to::{ChessMove, Position},
     PieceMoveState, SelectedPiece,
 };
 
@@ -84,17 +84,17 @@ pub(super) fn handle_field_click(
         }
         // Send the turn data to the server, naively assume it's a correct move
         let get_coord = |coord: i32| match queried_piece.1.color {
-            ChessPieceColorEnum::White => coord as u8,
-            ChessPieceColorEnum::Black => 7 - (coord as u8),
+            ChessPieceColorEnum::White => coord as i8,
+            ChessPieceColorEnum::Black => 7 - (coord as i8),
         };
         let chess_move = ChessMove {
             position_from: Position {
-                column: Column(get_coord(queried_piece.1.x)),
-                row: Row(get_coord(queried_piece.1.y)),
+                column: get_coord(queried_piece.1.x),
+                row: get_coord(queried_piece.1.x),
             },
             position_to: Position {
-                column: Column(get_coord(queried_tile.1.x)),
-                row: Row(get_coord(queried_tile.1.y)),
+                column: get_coord(queried_tile.1.x),
+                row: get_coord(queried_tile.1.y),
             },
         };
         debug!("Moving the piece");
@@ -143,32 +143,35 @@ pub(crate) fn ws_get_move(
     mut q_pieces: Query<(&mut Transform, &mut ChessPiece)>,
     mut ws_update: ResMut<WsUpdate>,
 ) {
-    let Some(ServerMsg::Game(GameServerMsg::PawnMove(ChessMove {
-        ref mut position_from,
-        ref mut position_to,
-    }))) = ws_update.0
+    let Some(ServerMsg::Game(GameServerMsg::PawnMove(
+        ChessMove {
+            ref mut position_from,
+            ref mut position_to,
+        },
+        _,
+    ))) = ws_update.0
     else {
         return;
     };
     if let ChessPieceColorEnum::Black = player_color.0 {
-        position_from.row.0 = 7 - position_from.row.0;
-        position_from.column.0 = 7 - position_from.column.0;
-        position_to.row.0 = 7 - position_to.row.0;
-        position_to.column.0 = 7 - position_to.column.0;
+        position_from.row = 7 - position_from.row;
+        position_from.column = 7 - position_from.column;
+        position_to.row = 7 - position_to.row;
+        position_to.column = 7 - position_to.column;
     };
     debug!("Moving piece from {:?}", position_from);
     let Some((mut transform, mut chess_piece_component)) =
         q_pieces.iter_mut().find(|(_, chess_piece_component)| {
-            chess_piece_component.x as u8 == position_from.column.0
-                && chess_piece_component.y as u8 == position_from.row.0
+            chess_piece_component.x as i8 == position_from.column
+                && chess_piece_component.y as i8 == position_from.row
         })
     else {
         error!("Not found a piece in location {:?}", position_from);
         return;
     };
     debug!("Moving piece to {:?}", position_to);
-    transform.translation.x = position_to.column.0 as f32 * TILE_SIZE + TILE_SIZE * 0.5;
-    transform.translation.y = position_to.row.0 as f32 * TILE_SIZE + TILE_SIZE * 0.5;
-    chess_piece_component.x = position_to.column.0 as i32;
-    chess_piece_component.y = position_to.row.0 as i32;
+    transform.translation.x = position_to.column as f32 * TILE_SIZE + TILE_SIZE * 0.5;
+    transform.translation.y = position_to.row as f32 * TILE_SIZE + TILE_SIZE * 0.5;
+    chess_piece_component.x = position_to.column as i32;
+    chess_piece_component.y = position_to.row as i32;
 }

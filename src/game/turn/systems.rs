@@ -90,7 +90,7 @@ pub(super) fn handle_field_click(
         let chess_move = ChessMove {
             position_from: Position {
                 column: get_coord(queried_piece.1.x),
-                row: get_coord(queried_piece.1.x),
+                row: get_coord(queried_piece.1.y),
             },
             position_to: Position {
                 column: get_coord(queried_tile.1.x),
@@ -139,8 +139,9 @@ pub(crate) fn ws_get_turn(
 }
 
 pub(crate) fn ws_get_move(
+    mut commands: Commands,
     player_color: Res<PlayerColorResource>,
-    mut q_pieces: Query<(&mut Transform, &mut ChessPiece)>,
+    mut q_pieces: Query<(Entity, &mut Transform, &mut ChessPiece)>,
     mut ws_update: ResMut<WsUpdate>,
 ) {
     let Some(ServerMsg::Game(GameServerMsg::PawnMove(
@@ -148,10 +149,34 @@ pub(crate) fn ws_get_move(
             ref mut position_from,
             ref mut position_to,
         },
-        _,
+        ref removed_piece,
     ))) = ws_update.0
     else {
         return;
+    };
+    if let Some((color, position)) = removed_piece {
+        let position = match player_color.0 {
+            ChessPieceColorEnum::Black => Position {
+                column: 7 - position.column,
+                row: 7 - position.row,
+            },
+            ChessPieceColorEnum::White => Position {
+                column: position.column,
+                row: position.row,
+            },
+        };
+        debug!("Searching for piece with color {color:?} and position {position:?}");
+        let piece_to_remove = q_pieces.iter().find(|(_, _, piece)| {
+            piece.color == *color
+                && piece.x as i8 == position.column
+                && piece.y as i8 == position.row
+        });
+        if let Some((entity_to_remove, _, _)) = piece_to_remove {
+            commands.entity(entity_to_remove).despawn();
+            debug!("Removed the entity at position {position:?}");
+        } else {
+            debug!("Not found a piece  with color {color:?} and position {position:?}");
+        }
     };
     if let ChessPieceColorEnum::Black = player_color.0 {
         position_from.row = 7 - position_from.row;
@@ -160,8 +185,8 @@ pub(crate) fn ws_get_move(
         position_to.column = 7 - position_to.column;
     };
     debug!("Moving piece from {:?}", position_from);
-    let Some((mut transform, mut chess_piece_component)) =
-        q_pieces.iter_mut().find(|(_, chess_piece_component)| {
+    let Some((_, mut transform, mut chess_piece_component)) =
+        q_pieces.iter_mut().find(|(_, _, chess_piece_component)| {
             chess_piece_component.x as i8 == position_from.column
                 && chess_piece_component.y as i8 == position_from.row
         })
@@ -174,4 +199,32 @@ pub(crate) fn ws_get_move(
     transform.translation.y = position_to.row as f32 * TILE_SIZE + TILE_SIZE * 0.5;
     chess_piece_component.x = position_to.column as i32;
     chess_piece_component.y = position_to.row as i32;
+}
+
+pub fn ws_get_confirm(
+    mut commands: Commands,
+    player_color: Res<PlayerColorResource>,
+    q_pieces: Query<(Entity, &ChessPiece)>,
+    ws_update: Res<WsUpdate>,
+) {
+    let Some(ServerMsg::Game(GameServerMsg::MovedCorrectly(Some((ref color, ref position))))) =
+        ws_update.0
+    else {
+        return;
+    };
+    let position = match player_color.0 {
+        ChessPieceColorEnum::Black => Position {
+            column: 7 - position.column,
+            row: 7 - position.row,
+        },
+        ChessPieceColorEnum::White => Position {
+            column: position.column,
+            row: position.row,
+        },
+    };
+    if let Some((entity, _)) = q_pieces.iter().find(|(_, piece)| {
+        piece.color == *color && piece.x as i8 == position.column && piece.y as i8 == position.row
+    }) {
+        commands.entity(entity).despawn()
+    }
 }

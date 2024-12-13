@@ -12,7 +12,7 @@ use crate::{
     },
     network::{
         resources::{WebsocketChannels, WsUpdate},
-        GameMessage, GameWsControlMsg, GameWsUpdateMsg,
+        GameClientMsg, GameServerMsg, ServerMsg,
     },
 };
 
@@ -102,7 +102,7 @@ pub(super) fn handle_field_click(
         IoTaskPool::get()
             .spawn(async move {
                 tx_current
-                    .send(GameWsControlMsg::TurnEnd(chess_move))
+                    .send(GameClientMsg::TurnEnd(chess_move))
                     .await
                     .unwrap()
             })
@@ -125,7 +125,7 @@ pub(crate) fn ws_get_turn(
     mut next_turn_state: ResMut<NextState<TurnState>>,
     ws_update: Res<WsUpdate>,
 ) {
-    let Some(GameWsUpdateMsg::Game(GameMessage::NewTurn(is_turn))) = ws_update.0 else {
+    let Some(ServerMsg::Game(GameServerMsg::NewTurn(is_turn))) = ws_update.0 else {
         return;
     };
     info!("Setting up turn state: {:?}", is_turn);
@@ -143,7 +143,7 @@ pub(crate) fn ws_get_move(
     mut q_pieces: Query<(&mut Transform, &mut ChessPiece)>,
     mut ws_update: ResMut<WsUpdate>,
 ) {
-    let Some(GameWsUpdateMsg::Game(GameMessage::PawnMove(ChessMove {
+    let Some(ServerMsg::Game(GameServerMsg::PawnMove(ChessMove {
         ref mut position_from,
         ref mut position_to,
     }))) = ws_update.0

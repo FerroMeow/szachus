@@ -15,20 +15,20 @@ pub mod resources;
 pub mod state;
 pub mod systems;
 
-#[derive(Serialize)]
-pub(crate) enum GameWsControlMsg {
-    TurnEnd(ChessMove),
-    Ack,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) enum ServerMsg {
+    Matchmaking(MatchmakingServerMsg),
+    Game(GameServerMsg),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) enum MatchmakingResponse {
+pub(crate) enum MatchmakingServerMsg {
     Searching,
     Success { color: ChessPieceColorEnum },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) enum GameMessage {
+pub(crate) enum GameServerMsg {
     NewTurn(bool),
     Error(String),
     Notification(String),
@@ -36,16 +36,16 @@ pub(crate) enum GameMessage {
     PawnMove(ChessMove),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) enum GameWsUpdateMsg {
-    Matchmaking(MatchmakingResponse),
-    Game(GameMessage),
+#[derive(Serialize)]
+pub(crate) enum GameClientMsg {
+    TurnEnd(ChessMove),
+    Ack,
 }
 
 pub(crate) async fn server_ws_handler(
     jwt: String,
-    rx_control: Receiver<GameWsControlMsg>,
-    tx_updates: Sender<GameWsUpdateMsg>,
+    rx_control: Receiver<GameClientMsg>,
+    tx_updates: Sender<ServerMsg>,
 ) {
     let Ok(ws) = WebSocket::new("ws://localhost:3000/game") else {
         return;
@@ -91,7 +91,7 @@ pub(crate) async fn server_ws_handler(
         .detach();
 }
 
-pub(crate) async fn send_ws_message(ws: WebSocket, rx: Receiver<GameWsControlMsg>) {
+pub(crate) async fn send_ws_message(ws: WebSocket, rx: Receiver<GameClientMsg>) {
     while let Ok(message) = rx.recv().await {
         ws.send_with_str(&serde_json::to_string(&message).unwrap())
             .unwrap();

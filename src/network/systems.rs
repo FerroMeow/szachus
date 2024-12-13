@@ -6,7 +6,7 @@ use bevy::{
 use crate::game::{resources::PlayerColorResource, GameState};
 
 use super::{
-    resources::WebsocketChannels, GameWsControlMsg, GameWsUpdateMsg, MatchmakingResponse, WsUpdate,
+    resources::WebsocketChannels, GameClientMsg, MatchmakingServerMsg, ServerMsg, WsUpdate,
 };
 
 pub(crate) fn ws_get_color(
@@ -14,8 +14,7 @@ pub(crate) fn ws_get_color(
     mut player_color: ResMut<PlayerColorResource>,
     ws_update: Res<WsUpdate>,
 ) {
-    let Some(GameWsUpdateMsg::Matchmaking(MatchmakingResponse::Success { color })) = ws_update.0
-    else {
+    let Some(ServerMsg::Matchmaking(MatchmakingServerMsg::Success { color })) = ws_update.0 else {
         return;
     };
     player_color.0 = color;
@@ -25,7 +24,7 @@ pub(crate) fn ws_get_color(
 pub(crate) fn on_game_start_confirm(websocket_channels: Res<WebsocketChannels>) {
     let tx = websocket_channels.tx_control.clone();
     IoTaskPool::get()
-        .spawn(async move { tx.send(GameWsControlMsg::Ack).await.unwrap() })
+        .spawn(async move { tx.send(GameClientMsg::Ack).await.unwrap() })
         .detach();
 }
 

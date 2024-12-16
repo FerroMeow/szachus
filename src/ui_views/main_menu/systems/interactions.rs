@@ -1,7 +1,7 @@
 use bevy::{prelude::*, tasks::IoTaskPool};
 
+use super::super::components::MainMenuStartButton;
 use crate::{
-    main_menu::components::MainMenuStartButton,
     network::{resources::WebsocketChannels, server_ws_handler, state::ConnectionState},
     JwtToken,
 };

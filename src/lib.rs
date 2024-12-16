@@ -4,9 +4,8 @@ use bevy_mod_picking::DefaultPickingPlugins;
 use wasm_bindgen::prelude::*;
 
 mod game;
-mod game_over;
-mod main_menu;
 mod network;
+mod ui_views;
 
 #[derive(Resource, Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct JwtToken {
@@ -43,8 +42,8 @@ pub fn main() {
         .add_plugins(DefaultPickingPlugins)
         .init_resource::<JwtToken>()
         .add_plugins(network::Network)
-        .add_plugins(main_menu::MainMenu)
+        .add_plugins(ui_views::main_menu::MainMenu)
         .add_plugins(game::Game)
-        .add_plugins(game_over::GameOverScreen)
+        .add_plugins(ui_views::game_over::GameOverScreen)
         .run();
 }

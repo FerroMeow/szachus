@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::main_menu::components::{MainMenuComponent, MainMenuStartButton};
+use super::super::components::{MainMenuComponent, MainMenuStartButton};
 
 pub fn spawn_menu(mut commands: Commands) {
     commands

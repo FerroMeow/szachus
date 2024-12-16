@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 
-use crate::game::resources::GameWinner;
+use crate::{game::resources::GameWinner, network::resources::WsUpdate};
 
-use super::components::GameOverScreenComponent;
+use super::components::{GameOverScreenComponent, RetryBtn};
 
-pub fn spawn_game_over_screen(mut commands: Commands, winner: Res<GameWinner>) {
+pub fn spawn(mut commands: Commands, winner: Res<GameWinner>) {
     // Screen
     let screen_background = if winner.0 {
         Color::linear_rgb(0.66, 1.0, 0.66)
@@ -53,9 +53,31 @@ pub fn spawn_game_over_screen(mut commands: Commands, winner: Res<GameWinner>) {
         .with_children(|parent| {
             parent.spawn(win_text_node);
             parent
-                .spawn(retry_button_node)
+                .spawn((retry_button_node, RetryBtn))
                 .with_children(|retry_button| {
                     retry_button.spawn(retry_button_text);
                 });
         });
+}
+
+pub fn despawn(
+    mut commands: Commands,
+    q_game_over_screen: Query<Entity, With<GameOverScreenComponent>>,
+) {
+    if let Ok(entity) = q_game_over_screen.get_single() {
+        commands.entity(entity).despawn_recursive();
+    };
+}
+
+pub fn reset_game_state(
+    q_retry_button: Query<&Interaction, With<RetryBtn>>,
+    mut ws_update: ResMut<WsUpdate>,
+) {
+    let Ok(btn_interact) = q_retry_button.get_single() else {
+        return;
+    };
+    let Interaction::Pressed = *btn_interact else {
+        return;
+    };
+    ws_update.0 = None;
 }

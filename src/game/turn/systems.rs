@@ -22,10 +22,12 @@ use super::{
 };
 
 pub(super) fn handle_pawn_click(
+    mut commands: Commands,
     mut event: EventReader<Pointer<Click>>,
     mut next_state: ResMut<NextState<PieceMoveState>>,
     player_color: Res<PlayerColorResource>,
-    query: Query<(Entity, &ChessPiece), With<ChessPiece>>,
+    q_pieces: Query<(Entity, &ChessPiece), With<ChessPiece>>,
+    q_tiles: Query<Entity, (With<ChessBoardTile>, Without<ChessPiece>)>,
     mut selected_piece: ResMut<SelectedPiece>,
 ) {
     for event in event.read() {
@@ -34,7 +36,7 @@ pub(super) fn handle_pawn_click(
         };
         let clicked_entity = event.target;
 
-        let Some(_) = query.iter().find(|(entity, chess_piece)| {
+        let Some(_) = q_pieces.iter().find(|(entity, chess_piece)| {
             if *entity != clicked_entity {
                 return false;
             }
@@ -50,31 +52,46 @@ pub(super) fn handle_pawn_click(
         };
         debug!("Clicked on chess piece {:?}", clicked_entity);
         selected_piece.0 = Some(clicked_entity);
+        for piece in q_pieces.iter() {
+            commands.entity(piece.0).remove::<PickableBundle>();
+        }
+        for tile in q_tiles.iter() {
+            commands.entity(tile).insert(PickableBundle {
+                pickable: Pickable {
+                    should_block_lower: false,
+                    is_hoverable: true,
+                },
+                ..default()
+            });
+        }
         next_state.set(PieceMoveState::PieceSelected);
     }
 }
 
 pub(super) fn handle_field_click(
+    mut commands: Commands,
     mut ev: EventReader<Pointer<Click>>,
-    mut q_pieces: Query<(&mut Transform, &mut ChessPiece), Without<ChessBoardTile>>,
-    q_tiles: Query<(&Transform, &ChessBoardTile), Without<ChessPiece>>,
+    mut q_pieces: Query<(Entity, &mut Transform, &mut ChessPiece), Without<ChessBoardTile>>,
+    q_tiles: Query<(Entity, &Transform, &ChessBoardTile), Without<ChessPiece>>,
     selected_piece: Res<SelectedPiece>,
     websocket_channels: Res<WebsocketChannels>,
 ) {
     let Some(selected_piece) = selected_piece.0 else {
         return;
     };
-    let piece_vec = q_pieces.iter().map(|(_, piece)| *piece).collect::<Vec<_>>();
-    let mut queried_piece = q_pieces.get_mut(selected_piece).unwrap();
     for ev in ev.read() {
-        let selected_tile = ev.target;
-        let Ok(queried_tile) = q_tiles.get(selected_tile) else {
+        let Some(queried_tile) = q_tiles.get(ev.target).ok() else {
             continue;
         };
+        let piece_vec = q_pieces
+            .iter()
+            .map(|(_, _, piece)| *piece)
+            .collect::<Vec<_>>();
+        let mut queried_piece = q_pieces.get_mut(selected_piece).unwrap();
         debug!("Clicked on tile {:?}!", queried_tile);
         if !queried_piece
-            .1
-            .is_move_valid(queried_tile.1, &piece_vec[..])
+            .2
+            .is_move_valid(queried_tile.2, &piece_vec[..])
         {
             debug!(
                 "Invalid move from {:?} to {:?}",
@@ -83,18 +100,18 @@ pub(super) fn handle_field_click(
             continue;
         }
         // Send the turn data to the server, naively assume it's a correct move
-        let get_coord = |coord: i32| match queried_piece.1.color {
+        let get_coord = |coord: i32| match queried_piece.2.color {
             ChessPieceColorEnum::White => coord as i8,
             ChessPieceColorEnum::Black => 7 - (coord as i8),
         };
         let chess_move = ChessMove {
             position_from: Position {
-                column: get_coord(queried_piece.1.x),
-                row: get_coord(queried_piece.1.y),
+                column: get_coord(queried_piece.2.x),
+                row: get_coord(queried_piece.2.y),
             },
             position_to: Position {
-                column: get_coord(queried_tile.1.x),
-                row: get_coord(queried_tile.1.y),
+                column: get_coord(queried_tile.2.x),
+                row: get_coord(queried_tile.2.y),
             },
         };
         debug!("Moving the piece");
@@ -112,11 +129,25 @@ pub(super) fn handle_field_click(
             "Moved the chess piece {:?} to {:?}",
             queried_piece.1, queried_tile.1
         );
-        queried_piece.0.translation.x = queried_tile.0.translation.x;
-        queried_piece.0.translation.y = queried_tile.0.translation.y;
-        queried_piece.1.x = queried_tile.1.x;
-        queried_piece.1.y = queried_tile.1.y;
+        queried_piece.1.translation.x = queried_tile.1.translation.x;
+        queried_piece.1.translation.y = queried_tile.1.translation.y;
+        queried_piece.2.x = queried_tile.2.x;
+        queried_piece.2.y = queried_tile.2.y;
         // Stop the turn
+
+        for piece in q_pieces.iter() {
+            commands.entity(piece.0).insert(PickableBundle {
+                pickable: Pickable {
+                    should_block_lower: false,
+                    is_hoverable: true,
+                },
+                ..default()
+            });
+        }
+        for tile in q_tiles.iter() {
+            commands.entity(tile.0).remove::<PickableBundle>();
+        }
+        break;
     }
 }
 

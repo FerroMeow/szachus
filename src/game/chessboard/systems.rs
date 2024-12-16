@@ -46,7 +46,13 @@ pub fn draw_chessboard(
                     ..default()
                 },
                 ChessBoardTile { x: x_pos, y: y_pos },
-                PickableBundle::default(),
+                PickableBundle {
+                    pickable: Pickable {
+                        should_block_lower: false,
+                        is_hoverable: true,
+                    },
+                    ..default()
+                },
             ));
         }
     }

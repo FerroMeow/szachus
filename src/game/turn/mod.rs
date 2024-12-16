@@ -19,7 +19,7 @@ pub(crate) enum PieceMoveState {
 }
 
 #[derive(Resource, Default)]
-struct SelectedPiece(pub Option<Entity>);
+pub struct SelectedPiece(pub Option<Entity>);
 
 impl Plugin for Turn {
     fn build(&self, app: &mut App) {

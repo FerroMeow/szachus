@@ -1,8 +1,21 @@
 use bevy::prelude::*;
 
-use crate::{game::resources::GameWinner, network::resources::WsUpdate};
+use crate::{
+    game::{
+        resources::{GameWinner, PlayerColorResource},
+        turn::{PieceMoveState, SelectedPiece},
+        TurnState,
+    },
+    network::{
+        resources::{WebsocketChannels, WsUpdate},
+        state::ConnectionState,
+    },
+};
 
-use super::components::{GameOverScreenComponent, RetryBtn};
+use super::{
+    components::{GameOverScreenComponent, RetryBtn},
+    GameState,
+};
 
 pub fn spawn(mut commands: Commands, winner: Res<GameWinner>) {
     // Screen
@@ -39,9 +52,17 @@ pub fn spawn(mut commands: Commands, winner: Res<GameWinner>) {
     let win_text_node = TextBundle::from_section(win_text_content, win_text_style.clone());
 
     // Start again button
-    let retry_button_style = Style { ..default() };
+    let retry_button_style = Style {
+        padding: UiRect::horizontal(Val::Px(16.0))
+            .with_top(Val::Px(8.0))
+            .with_bottom(Val::Px(8.0)),
+        margin: UiRect::top(Val::Px(16.0)),
+        ..default()
+    };
     let retry_button_node = ButtonBundle {
         style: retry_button_style,
+        background_color: Color::WHITE.into(),
+        border_radius: BorderRadius::all(Val::Px(8.0)),
         ..default()
     };
 
@@ -70,14 +91,28 @@ pub fn despawn(
 }
 
 pub fn reset_game_state(
+    mut commands: Commands,
     q_retry_button: Query<&Interaction, With<RetryBtn>>,
-    mut ws_update: ResMut<WsUpdate>,
+    mut s_connection: ResMut<NextState<ConnectionState>>,
+    mut s_game: ResMut<NextState<GameState>>,
+    mut s_piece_move: ResMut<NextState<PieceMoveState>>,
+    mut s_turn: ResMut<NextState<TurnState>>,
 ) {
     let Ok(btn_interact) = q_retry_button.get_single() else {
+        // Button not interacted with
         return;
     };
     let Interaction::Pressed = *btn_interact else {
+        // Button not clicked
         return;
     };
-    ws_update.0 = None;
+    commands.remove_resource::<WebsocketChannels>();
+    commands.remove_resource::<GameWinner>();
+    commands.insert_resource(PlayerColorResource::default());
+    commands.insert_resource(WsUpdate::default());
+    commands.insert_resource(SelectedPiece::default());
+    s_game.set(GameState::default());
+    s_connection.set(ConnectionState::default());
+    s_turn.set(TurnState::default());
+    s_piece_move.set(PieceMoveState::default());
 }

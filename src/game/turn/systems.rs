@@ -7,7 +7,7 @@ use crate::{
             components::{ChessBoardTile, ChessPiece},
             systems::TILE_SIZE,
         },
-        resources::PlayerColorResource,
+        resources::{GameWinner, PlayerColorResource},
         ChessPieceColorEnum, TurnState,
     },
     network::{
@@ -18,7 +18,7 @@ use crate::{
 
 use super::{
     to::{ChessMove, Position},
-    PieceMoveState, SelectedPiece,
+    GameState, PieceMoveState, SelectedPiece,
 };
 
 pub(super) fn handle_pawn_click(
@@ -227,4 +227,23 @@ pub fn ws_get_confirm(
     }) {
         commands.entity(entity).despawn()
     }
+}
+
+pub fn ws_get_win(
+    mut commands: Commands,
+    mut game_state: ResMut<NextState<GameState>>,
+    websocket_channels: Res<WebsocketChannels>,
+    ws_update: Res<WsUpdate>,
+) {
+    let Some(ServerMsg::Game(GameServerMsg::GameEnd(is_won))) = ws_update.0 else {
+        return;
+    };
+    let tx = websocket_channels.tx_control.clone();
+    IoTaskPool::get()
+        .spawn(async move {
+            tx.send(GameClientMsg::Close).await.unwrap();
+        })
+        .detach();
+    commands.insert_resource(GameWinner(is_won));
+    game_state.set(GameState::Finished);
 }

@@ -4,6 +4,7 @@ use bevy_mod_picking::DefaultPickingPlugins;
 use wasm_bindgen::prelude::*;
 
 mod game;
+mod game_over;
 mod main_menu;
 mod network;
 
@@ -44,5 +45,6 @@ pub fn main() {
         .add_plugins(network::Network)
         .add_plugins(main_menu::MainMenu)
         .add_plugins(game::Game)
+        .add_plugins(game_over::GameOverScreen)
         .run();
 }

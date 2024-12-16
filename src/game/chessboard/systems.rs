@@ -268,3 +268,13 @@ fn spawn_chess_piece(
         PickableBundle::default(),
     ));
 }
+
+pub fn clean_chessboard(
+    mut commands: Commands,
+    q_pieces: Query<Entity, (With<ChessPiece>, Without<ChessBoardTile>)>,
+    q_tiles: Query<Entity, (With<ChessBoardTile>, Without<ChessPiece>)>,
+) {
+    for entity in q_pieces.iter().chain(q_tiles.iter()) {
+        commands.entity(entity).despawn_recursive();
+    }
+}

@@ -27,7 +27,7 @@ impl Plugin for Turn {
             .init_state::<PieceMoveState>()
             .add_systems(
                 FixedUpdate,
-                (ws_get_turn, ws_get_move, ws_get_confirm)
+                (ws_get_turn, ws_get_move, ws_get_confirm, ws_get_win)
                     .after(ws_update)
                     .run_if(in_state(GameState::Playing)),
             )

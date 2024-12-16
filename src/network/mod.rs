@@ -43,6 +43,7 @@ pub(crate) enum GameServerMsg {
 pub(crate) enum GameClientMsg {
     TurnEnd(ChessMove),
     Ack,
+    Close,
 }
 
 pub(crate) async fn server_ws_handler(
@@ -96,6 +97,10 @@ pub(crate) async fn server_ws_handler(
 
 pub(crate) async fn send_ws_message(ws: WebSocket, rx: Receiver<GameClientMsg>) {
     while let Ok(message) = rx.recv().await {
+        if let GameClientMsg::Close = message {
+            debug!("Closing the web socket");
+            return;
+        }
         ws.send_with_str(&serde_json::to_string(&message).unwrap())
             .unwrap();
     }

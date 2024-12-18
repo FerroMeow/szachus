@@ -28,6 +28,8 @@ pub(crate) enum ServerMsg {
 pub(crate) enum MatchmakingServerMsg {
     Searching,
     Success { color: ChessPieceColorEnum },
+    Error(String),
+    GameDropped(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

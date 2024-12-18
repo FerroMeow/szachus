@@ -271,7 +271,13 @@ fn spawn_chess_piece(
             layout: texture_atlas_layout,
             index: texture_x + texture_y,
         },
-        PickableBundle::default(),
+        PickableBundle {
+            pickable: Pickable {
+                should_block_lower: false,
+                is_hoverable: false,
+            },
+            ..default()
+        },
     ));
 }
 

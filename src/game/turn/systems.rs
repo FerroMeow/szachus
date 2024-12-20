@@ -25,13 +25,15 @@ use super::{
 
 type WithChessPiece = (With<ChessPiece>, Without<ChessBoardTile>);
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn on_select_target(
     mut commands: Commands,
     mut event: EventReader<Pointer<Click>>,
     mut next_state: ResMut<NextState<PieceMoveState>>,
     player_color: Res<PlayerColorResource>,
     q_pieces: Query<(Entity, &ChessPiece), WithChessPiece>,
-    q_tiles: Query<&ChessBoardTile, With<ChessBoardTile>>,
+    q_tiles: Query<&ChessBoardTile, (With<ChessBoardTile>, Without<StartTile>)>,
+    q_start_tile: Query<Entity, With<StartTile>>,
     mut selected_piece: ResMut<SelectedPiece>,
 ) {
     for event in event.read() {
@@ -42,7 +44,6 @@ pub(super) fn on_select_target(
         let Ok(selected_tile) = q_tiles.get(selected_entity) else {
             continue;
         };
-        commands.entity(selected_entity).insert(StartTile);
         let Some((selected_entity, _)) = q_pieces.iter().find(|(_, chess_piece)| {
             if !chess_piece.alive {
                 return false;
@@ -57,8 +58,13 @@ pub(super) fn on_select_target(
         }) else {
             continue;
         };
+        for entity in q_start_tile.iter() {
+            commands.entity(entity).remove::<StartTile>();
+        }
+        commands.entity(selected_entity).insert(StartTile);
         selected_piece.0 = Some(selected_entity);
         next_state.set(PieceMoveState::PieceSelected);
+        break;
     }
 }
 

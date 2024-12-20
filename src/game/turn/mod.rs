@@ -35,8 +35,10 @@ impl Plugin for Turn {
             .add_systems(
                 Update,
                 (
-                    on_select_target.run_if(in_state(PieceMoveState::TurnBeginning)),
-                    on_select_destination.run_if(in_state(PieceMoveState::PieceSelected)),
+                    on_select_target,
+                    on_select_destination
+                        .run_if(in_state(PieceMoveState::PieceSelected))
+                        .after(on_select_target),
                 )
                     .run_if(
                         in_state(GameState::Playing).and_then(in_state(TurnState::PlayersTurn)),

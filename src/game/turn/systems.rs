@@ -59,7 +59,6 @@ pub(super) fn on_select_target(
         };
         selected_piece.0 = Some(selected_entity);
         next_state.set(PieceMoveState::PieceSelected);
-        debug!("selected piece!");
     }
 }
 
@@ -85,13 +84,10 @@ pub(super) fn on_select_destination(
         };
         let piece_vec = q_pieces.iter().copied().collect::<Vec<_>>();
         let piece = q_pieces.get_mut(selected_piece).unwrap();
-        debug!("Clicked on tile {:?}!", tile);
         if !piece.is_move_valid(tile, &piece_vec[..]) {
-            debug!("Invalid move to {tile:?}");
             continue;
         }
         // Send the turn data to the server, naively assume it's a correct move
-        debug!("Moving the piece");
         IoTaskPool::get()
             .spawn(ws_send_turn_end(
                 websocket_channels.tx_control.clone(),
@@ -141,7 +137,6 @@ pub(crate) fn ws_get_move(
         return;
     };
     if let Some((color, position)) = removed_piece {
-        debug!("Searching for piece with color {color:?} and position {position:?}");
         let removed_piece = q_pieces
             .iter()
             .find(|(_, _, piece)| {
@@ -150,9 +145,7 @@ pub(crate) fn ws_get_move(
                     && piece.y as i8 == position.row
             })
             .map(|(entity, _, _)| commands.entity(entity).despawn());
-        if removed_piece.is_none() {
-            debug!("Not found a piece  with color {color:?} and position {position:?}");
-        }
+        if removed_piece.is_none() {}
     };
     let Some((_, mut transform, mut chess_piece_component)) =
         q_pieces.iter_mut().find(|(_, _, chess_piece_component)| {
@@ -160,7 +153,6 @@ pub(crate) fn ws_get_move(
                 && chess_piece_component.y as i8 == position_from.row
         })
     else {
-        error!("Not found a piece in location {:?}", position_from);
         return;
     };
     transform.translation.x = position_to.column as f32 * TILE_SIZE + TILE_SIZE * 0.5;

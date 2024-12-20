@@ -41,6 +41,8 @@ pub fn main() {
         )
         .add_plugins(DefaultPickingPlugins)
         .init_resource::<JwtToken>()
+        .add_plugins(ui_views::retry_game::RetryPlugin)
+        .add_plugins(ui_views::fatal_error::FatalErrorScreen)
         .add_plugins(network::Network)
         .add_plugins(ui_views::main_menu::MainMenu)
         .add_plugins(game::Game)

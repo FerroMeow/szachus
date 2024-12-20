@@ -1,16 +1,11 @@
 use bevy::prelude::*;
 
-use crate::{game::resources::GameWinner, ui_views::retry_game::RetryBtn};
+use crate::ui_views::retry_game::RetryBtn;
 
-use super::components::GameOverScreenComponent;
+use super::components::FatalErrorScreenComponent;
 
-pub fn spawn(mut commands: Commands, winner: Res<GameWinner>) {
+pub fn spawn(mut commands: Commands) {
     // Screen
-    let screen_background = if winner.0 {
-        Color::linear_rgb(0.66, 1.0, 0.66)
-    } else {
-        Color::linear_rgb(1.0, 0.66, 0.66)
-    };
     let screen_style = Style {
         flex_direction: FlexDirection::Column,
         justify_content: JustifyContent::Center,
@@ -22,21 +17,19 @@ pub fn spawn(mut commands: Commands, winner: Res<GameWinner>) {
     };
     let screen_node = NodeBundle {
         style: screen_style,
-        background_color: screen_background.into(),
+        background_color: Color::linear_rgb(255.0, 0.0, 0.0).into(),
         ..default()
     };
 
     // Win text
-    let win_text_content = if winner.0 {
-        "You just won the game! Congratulations!"
-    } else {
-        "You lost this game! Try again."
-    };
     let win_text_style = TextStyle {
         color: Color::BLACK,
         ..default()
     };
-    let win_text_node = TextBundle::from_section(win_text_content, win_text_style.clone());
+    let win_text_node = TextBundle::from_section(
+        "The game encountered a critical error. Please try playing again!",
+        win_text_style.clone(),
+    );
 
     // Start again button
     let retry_button_style = Style {
@@ -57,7 +50,7 @@ pub fn spawn(mut commands: Commands, winner: Res<GameWinner>) {
     let retry_button_text = TextBundle::from_section("Play again", win_text_style);
 
     commands
-        .spawn((screen_node, GameOverScreenComponent))
+        .spawn((screen_node, FatalErrorScreenComponent))
         .with_children(|parent| {
             parent.spawn(win_text_node);
             parent
@@ -70,7 +63,7 @@ pub fn spawn(mut commands: Commands, winner: Res<GameWinner>) {
 
 pub fn despawn(
     mut commands: Commands,
-    q_game_over_screen: Query<Entity, With<GameOverScreenComponent>>,
+    q_game_over_screen: Query<Entity, With<FatalErrorScreenComponent>>,
 ) {
     if let Ok(entity) = q_game_over_screen.get_single() {
         commands.entity(entity).despawn_recursive();

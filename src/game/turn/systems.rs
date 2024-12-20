@@ -14,7 +14,7 @@ use crate::{
     },
     network::{
         resources::{WebsocketChannels, WsUpdate},
-        GameClientMsg, GameServerMsg, ServerMsg,
+        GameClientMsg, GameServerMsg, MatchmakingServerMsg, ServerMsg,
     },
 };
 
@@ -185,4 +185,12 @@ pub fn ws_get_win(
         .detach();
     commands.insert_resource(GameWinner(is_won));
     game_state.set(GameState::Finished);
+}
+
+pub fn ws_get_error(mut s_game_state: ResMut<NextState<GameState>>, r_ws_update: Res<WsUpdate>) {
+    let Some(ServerMsg::Matchmaking(MatchmakingServerMsg::Error(ref error))) = r_ws_update.0 else {
+        return;
+    };
+    error!("{error}");
+    s_game_state.set(GameState::Error);
 }

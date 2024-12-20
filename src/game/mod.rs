@@ -28,6 +28,7 @@ pub(crate) enum GameState {
     NotInGame,
     Playing,
     Finished,
+    Error,
 }
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]

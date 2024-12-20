@@ -180,9 +180,15 @@ pub fn ws_get_win(
 }
 
 pub fn ws_get_error(mut s_game_state: ResMut<NextState<GameState>>, r_ws_update: Res<WsUpdate>) {
-    let Some(ServerMsg::Matchmaking(MatchmakingServerMsg::Error(ref error))) = r_ws_update.0 else {
+    let Some(ServerMsg::Matchmaking(ref matchmaking_server_message)) = r_ws_update.0 else {
         return;
     };
-    error!("{error}");
+    match matchmaking_server_message {
+        MatchmakingServerMsg::Error(_) => (),
+        MatchmakingServerMsg::GameDropped(_) => (),
+        _ => {
+            return;
+        }
+    };
     s_game_state.set(GameState::Error);
 }

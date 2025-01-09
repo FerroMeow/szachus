@@ -1,6 +1,7 @@
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy_mod_picking::DefaultPickingPlugins;
+use game::chessboard::systems::{BOARD_SIZE, TILE_SIZE};
 use wasm_bindgen::prelude::*;
 
 mod game;
@@ -36,6 +37,18 @@ pub fn main() {
                 .set(LogPlugin {
                     filter: "info,wgpu_core=warn,wgpu_hal=warn,szachus=debug".into(),
                     level: bevy::log::Level::DEBUG,
+                    ..default()
+                })
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: String::from("Szachuś"),
+                        resolution: (
+                            TILE_SIZE * BOARD_SIZE as f32 * 1.33,
+                            TILE_SIZE * BOARD_SIZE as f32,
+                        )
+                            .into(),
+                        ..default()
+                    }),
                     ..default()
                 }),
         )

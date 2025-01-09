@@ -10,7 +10,8 @@ use bevy::{
 use bevy_mod_picking::prelude::*;
 
 pub(crate) const BOARD_SIZE: i32 = 8;
-pub(crate) const TILE_SIZE: f32 = 32.0;
+pub(crate) const TILE_SIZE: f32 = 96.0;
+pub(crate) const SPRITE_SIZE: UVec2 = UVec2::new(18, 28);
 
 pub fn create_camera(mut commands: Commands) {
     let middle_point = BOARD_SIZE as f32 * TILE_SIZE / 2.0;
@@ -71,7 +72,7 @@ pub fn add_chess_pieces(
     };
     // Load sprites
     let chesspieces_texture: Handle<Image> = asset_server.load("textures/chesspieces.png");
-    let chesspieces_layout = TextureAtlasLayout::from_grid(UVec2::new(18, 28), 6, 2, None, None);
+    let chesspieces_layout = TextureAtlasLayout::from_grid(SPRITE_SIZE, 6, 2, None, None);
     let chesspieces_layout_handle = texture_atlas_layout_asset.add(chesspieces_layout);
     // Spawn pawn rows
     for i in 0..8 {
@@ -260,10 +261,11 @@ fn spawn_chess_piece(
         },
         SpriteBundle {
             transform: Transform::from_xyz(
-                tile.x as f32 * TILE_SIZE + TILE_SIZE * 0.5,
-                tile.y as f32 * TILE_SIZE + TILE_SIZE * 0.5,
+                tile.x as f32 * TILE_SIZE + TILE_SIZE * 0.5 - SPRITE_SIZE.x as f32 * 0.5,
+                tile.y as f32 * TILE_SIZE + TILE_SIZE * 0.5 + SPRITE_SIZE.y as f32 * 0.5,
                 1.0,
-            ),
+            )
+            .with_scale(Vec3::splat(3.0)),
             texture,
             ..default()
         },

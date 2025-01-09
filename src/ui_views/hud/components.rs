@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
-#[derive(Component)]
+#[derive(Debug, Component)]
 pub(crate) struct HudComponent;
 
-#[derive(Component)]
+#[derive(Debug, Component)]
 pub(crate) struct TurnTextComponent;
+
+#[derive(Debug, Component)]
+pub(crate) struct TimeTextComponent;

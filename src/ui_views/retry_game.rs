@@ -12,6 +12,8 @@ use crate::{
     },
 };
 
+use super::hud::resources::GameTimeElapsed;
+
 pub struct RetryPlugin;
 
 impl Plugin for RetryPlugin {
@@ -44,6 +46,7 @@ pub fn reset_game_state(
     commands.insert_resource(PlayerColorResource::default());
     commands.insert_resource(WsUpdate::default());
     commands.insert_resource(SelectedPiece::default());
+    commands.insert_resource(GameTimeElapsed::default());
     s_game.set(GameState::default());
     s_connection.set(ConnectionState::default());
     s_turn.set(TurnState::default());

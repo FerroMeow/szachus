@@ -30,35 +30,34 @@ impl Default for JwtToken {
 
 #[wasm_bindgen]
 pub fn main() {
-    App::new()
-        .add_plugins(
-            DefaultPlugins
-                .set(ImagePlugin::default_nearest())
-                .set(LogPlugin {
-                    filter: "info,wgpu_core=warn,wgpu_hal=warn,szachus=debug".into(),
-                    level: bevy::log::Level::DEBUG,
-                    ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: String::from("Szachuś"),
-                        resolution: (
-                            TILE_SIZE * BOARD_SIZE as f32 * 1.33,
-                            TILE_SIZE * BOARD_SIZE as f32,
-                        )
-                            .into(),
-                        ..default()
-                    }),
-                    ..default()
-                }),
+    let log_plugin = LogPlugin {
+        filter: "info,wgpu_core=warn,wgpu_hal=warn,szachus=debug".into(),
+        level: bevy::log::Level::DEBUG,
+        ..default()
+    };
+    let window = Window {
+        title: String::from("Szachuś"),
+        resolution: (
+            TILE_SIZE * BOARD_SIZE as f32 * 1.5,
+            TILE_SIZE * BOARD_SIZE as f32,
         )
+            .into(),
+        ..default()
+    };
+    let window_plugin = WindowPlugin {
+        primary_window: Some(window),
+        ..default()
+    };
+    let default_plugins = DefaultPlugins
+        .set(ImagePlugin::default_nearest())
+        .set(log_plugin)
+        .set(window_plugin);
+    let mut app = App::new();
+    app.add_plugins(default_plugins)
         .add_plugins(DefaultPickingPlugins)
         .init_resource::<JwtToken>()
-        .add_plugins(ui_views::retry_game::RetryPlugin)
-        .add_plugins(ui_views::fatal_error::FatalErrorScreen)
+        .add_plugins(ui_views::UI)
         .add_plugins(network::Network)
-        .add_plugins(ui_views::main_menu::MainMenu)
-        .add_plugins(game::Game)
-        .add_plugins(ui_views::game_over::GameOverScreen)
-        .run();
+        .add_plugins(game::Game);
+    app.run();
 }

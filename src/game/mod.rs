@@ -31,11 +31,21 @@ pub(crate) enum GameState {
     Error,
 }
 
-#[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
+#[derive(States, Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub(crate) enum TurnState {
     PlayersTurn,
     #[default]
     WaitingTurn,
+}
+
+impl From<TurnState> for String {
+    fn from(val: TurnState) -> Self {
+        match val {
+            TurnState::PlayersTurn => "You",
+            TurnState::WaitingTurn => "Enemy",
+        }
+        .into()
+    }
 }
 
 pub(crate) struct Game;

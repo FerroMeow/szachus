@@ -22,9 +22,13 @@ pub(crate) enum PieceMoveState {
 #[derive(Resource, Default)]
 pub struct SelectedPiece(pub Option<Entity>);
 
+#[derive(Resource, Default)]
+pub struct RemovedPieceCount(pub u8);
+
 impl Plugin for Turn {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectedPiece>()
+            .init_resource::<RemovedPieceCount>()
             .init_state::<PieceMoveState>()
             .add_systems(
                 FixedUpdate,

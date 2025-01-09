@@ -1,12 +1,12 @@
 use async_channel::Sender;
-use bevy::{prelude::*, tasks::IoTaskPool};
+use bevy::{prelude::*, tasks::IoTaskPool, window::PrimaryWindow};
 use bevy_mod_picking::prelude::*;
 
 use crate::{
     game::{
         chessboard::{
             components::{ChessBoardTile, ChessPiece},
-            systems::TILE_SIZE,
+            systems::{SPRITE_SIZE, TILE_SIZE},
         },
         resources::{GameWinner, PlayerColorResource},
         turn::components::StartTile,
@@ -20,7 +20,7 @@ use crate::{
 
 use super::{
     to::{ChessMove, Position},
-    GameState, PieceMoveState, SelectedPiece,
+    GameState, PieceMoveState, RemovedPieceCount, SelectedPiece,
 };
 
 type WithChessPiece = (With<ChessPiece>, Without<ChessBoardTile>);
@@ -130,6 +130,8 @@ pub(crate) fn ws_get_turn(
 pub(crate) fn ws_get_move(
     mut commands: Commands,
     mut q_pieces: Query<(Entity, &mut Transform, &mut ChessPiece)>,
+    r_player_color: Res<PlayerColorResource>,
+    mut r_removed_piece_count: ResMut<RemovedPieceCount>,
     mut ws_update: ResMut<WsUpdate>,
 ) {
     let Some(ServerMsg::Game(GameServerMsg::PawnMove(
@@ -143,15 +145,26 @@ pub(crate) fn ws_get_move(
         return;
     };
     if let Some((color, position)) = removed_piece {
-        let removed_piece = q_pieces
-            .iter()
-            .find(|(_, _, piece)| {
-                piece.color == *color
-                    && piece.x as i8 == position.column
-                    && piece.y as i8 == position.row
-            })
-            .map(|(entity, _, _)| commands.entity(entity).despawn());
-        if removed_piece.is_none() {}
+        let removed_piece = q_pieces.iter_mut().find(|(_, _, piece)| {
+            piece.color == *color
+                && piece.x as i8 == position.column
+                && piece.y as i8 == position.row
+        });
+        if let Some(mut removed_piece) = removed_piece {
+            commands
+                .entity(removed_piece.0)
+                .remove::<(ChessPiece, PickableBundle)>();
+            if removed_piece.2.color == r_player_color.0 {
+                commands.entity(removed_piece.0).despawn();
+            } else {
+                let removed_count = r_removed_piece_count.0;
+                removed_piece.1.translation.x =
+                    TILE_SIZE * 8.5 + TILE_SIZE * (removed_count % 2) as f32;
+                removed_piece.1.translation.y =
+                    TILE_SIZE * 0.5 + TILE_SIZE * (removed_count / 2) as f32;
+                r_removed_piece_count.0 += 1;
+            }
+        };
     };
     let Some((_, mut transform, mut chess_piece_component)) =
         q_pieces.iter_mut().find(|(_, _, chess_piece_component)| {

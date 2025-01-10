@@ -6,7 +6,6 @@ use crate::game::{
 
 use super::{components::*, GameTimeElapsed};
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::*;
 
 fn spawn_player_color_text(color: ChessPieceColorEnum) -> impl Bundle {
     TextBundle::from_section(
@@ -53,15 +52,8 @@ pub fn spawn_hud(
             NodeBundle {
                 style: Style {
                     flex_direction: FlexDirection::Column,
-                    width: Val::Percent(TILE_SIZE * BOARD_SIZE as f32 * 0.5),
+                    width: Val::Px(TILE_SIZE * BOARD_SIZE as f32 * 0.25),
                     ..default()
-                },
-                ..default()
-            },
-            PickableBundle {
-                pickable: Pickable {
-                    should_block_lower: false,
-                    is_hoverable: false,
                 },
                 ..default()
             },
@@ -92,10 +84,9 @@ pub fn update_time_elapsed(
     let minutes = (time_elapsed / 60) % 60;
     let seconds = time_elapsed % 60;
     for mut text in &mut q_turn_text {
-        let style = TextStyle::default();
-        text.sections[1] = TextSection::new(format!("{hours:02}"), style.clone());
-        text.sections[3] = TextSection::new(format!("{minutes:02}"), style.clone());
-        text.sections[5] = TextSection::new(format!("{seconds:02}"), style);
+        text.sections[1].value = format!("{hours:02}");
+        text.sections[3].value = format!("{minutes:02}");
+        text.sections[5].value = format!("{seconds:02}");
     }
     r_time_elapsed.0 = time_elapsed + 1;
 }

@@ -25,6 +25,6 @@ impl Plugin for Chessboard {
                 OnEnter(GameState::Playing),
                 (draw_chessboard, add_chess_pieces),
             )
-            .add_systems(OnEnter(GameState::Finished), clean_chessboard);
+            .add_systems(OnEnter(GameState::NotInGame), clean_chessboard);
     }
 }

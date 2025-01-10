@@ -1,12 +1,12 @@
 use async_channel::Sender;
-use bevy::{prelude::*, tasks::IoTaskPool, window::PrimaryWindow};
+use bevy::{prelude::*, tasks::IoTaskPool};
 use bevy_mod_picking::prelude::*;
 
 use crate::{
     game::{
         chessboard::{
             components::{ChessBoardTile, ChessPiece},
-            systems::{SPRITE_SIZE, TILE_SIZE},
+            systems::TILE_SIZE,
         },
         resources::{GameWinner, PlayerColorResource},
         turn::components::StartTile,
@@ -151,12 +151,10 @@ pub(crate) fn ws_get_move(
                 && piece.y as i8 == position.row
         });
         if let Some(mut removed_piece) = removed_piece {
-            commands
-                .entity(removed_piece.0)
-                .remove::<(ChessPiece, PickableBundle)>();
             if removed_piece.2.color == r_player_color.0 {
                 commands.entity(removed_piece.0).despawn();
             } else {
+                commands.entity(removed_piece.0).remove::<PickableBundle>();
                 let removed_count = r_removed_piece_count.0;
                 removed_piece.1.translation.x =
                     TILE_SIZE * 8.5 + TILE_SIZE * (removed_count % 2) as f32;

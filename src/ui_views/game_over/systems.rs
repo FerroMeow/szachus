@@ -7,17 +7,16 @@ use super::components::GameOverScreenComponent;
 pub fn spawn(mut commands: Commands, winner: Res<GameWinner>) {
     // Screen
     let screen_background = if winner.0 {
-        Color::linear_rgb(0.66, 1.0, 0.66)
+        Color::linear_rgba(0.66, 1.0, 0.66, 0.2)
     } else {
-        Color::linear_rgb(1.0, 0.66, 0.66)
+        Color::linear_rgba(1.0, 0.66, 0.66, 0.2)
     };
     let screen_style = Style {
         flex_direction: FlexDirection::Column,
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         width: Val::Percent(100.0),
-        height: Val::Percent(100.0),
-
+        padding: UiRect::all(Val::Px(16.0)),
         ..default()
     };
     let screen_node = NodeBundle {

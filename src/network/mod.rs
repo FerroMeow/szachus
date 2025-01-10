@@ -77,7 +77,6 @@ pub(crate) async fn server_ws_handler(
         let tx_updates_current = tx_updates.clone();
         TaskPool::new()
             .spawn(async move {
-                debug!("WebSocket: {:?}", &msg);
                 tx_updates_current.send(msg).await.unwrap();
             })
             .detach();
